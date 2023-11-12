@@ -298,7 +298,6 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 						d.WorkDone()
 						continue
 					default:
-						logger.Warnln("[Grokked] Buffer")
 						d.WorkDone()
 						continue
 					}
