@@ -34,12 +34,11 @@ func Set(amt, dur uint64) (tx string) {
 	}
 
 	if err := rpcClientW.CallFor(ctx, &txid, "transfer", params); err != nil {
-		logger.Errorln("[Set]", err)
+		rpc.PrintError("[Grokked] Set: %s", err)
 		return
 	}
 
-	logger.Printf("[Set] Set TX: %s\n", txid)
-	rpc.AddLog("Set TX: " + txid.TXID)
+	rpc.PrintLog("[Grokked] Set TX: %s", txid)
 
 	return txid.TXID
 }
@@ -69,12 +68,11 @@ func Join(amt uint64) (tx string) {
 	}
 
 	if err := rpcClientW.CallFor(ctx, &txid, "transfer", params); err != nil {
-		logger.Errorln("[Join]", err)
+		rpc.PrintError("[Grokked] Join: %s", err)
 		return
 	}
 
-	logger.Printf("[Join] Join TX: %s\n", txid)
-	rpc.AddLog("Join TX: " + txid.TXID)
+	rpc.PrintLog("[Grokked] Join TX: %s", txid)
 
 	return txid.TXID
 }
@@ -98,12 +96,11 @@ func Start() (tx string) {
 	}
 
 	if err := rpcClientW.CallFor(ctx, &txid, "transfer", params); err != nil {
-		logger.Errorln("[Start]", err)
+		rpc.PrintError("[Grokked] Start: %s", err)
 		return
 	}
 
-	logger.Printf("[Start] Start TX: %s\n", txid)
-	rpc.AddLog("Start TX: " + txid.TXID)
+	rpc.PrintLog("[Grokked] Start TX: %s", txid)
 
 	return txid.TXID
 }
@@ -127,12 +124,11 @@ func Pass() (tx string) {
 	}
 
 	if err := rpcClientW.CallFor(ctx, &txid, "transfer", params); err != nil {
-		logger.Errorln("[Pass]", err)
+		rpc.PrintError("[Grokked] Pass: %s", err)
 		return
 	}
 
-	logger.Printf("[Pass] Pass TX: %s\n", txid)
-	rpc.AddLog("Pass TX: " + txid.TXID)
+	rpc.PrintLog("[Grokked] Pass TX: %s", txid)
 
 	return txid.TXID
 }
@@ -156,12 +152,11 @@ func Grokked() (tx string) {
 	}
 
 	if err := rpcClientW.CallFor(ctx, &txid, "transfer", params); err != nil {
-		logger.Errorln("[Grokked]", err)
+		rpc.PrintError("[Grokked] Grok: %s", err)
 		return
 	}
 
-	logger.Printf("[Grokked] TX: %s\n", txid)
-	rpc.AddLog("Grokked TX: " + txid.TXID)
+	rpc.PrintLog("[Grokked] Grok TX: %s", txid)
 
 	return txid.TXID
 }
@@ -188,12 +183,11 @@ func Win(a uint64) (tx string) {
 	}
 
 	if err := rpcClientW.CallFor(ctx, &txid, "transfer", params); err != nil {
-		logger.Errorln("[Win]", err)
+		rpc.PrintError("[Grokked] Win: %s", err)
 		return
 	}
 
-	logger.Printf("[Win] TX: %s\n", txid)
-	rpc.AddLog("Win TX: " + txid.TXID)
+	rpc.PrintLog("[Grokked] Win TX: %s", txid)
 
 	return txid.TXID
 }
@@ -220,12 +214,11 @@ func Refund(p uint64) (tx string) {
 	}
 
 	if err := rpcClientW.CallFor(ctx, &txid, "transfer", params); err != nil {
-		logger.Errorln("[Refund]", err)
+		rpc.PrintError("[Grokked] Refund: %s", err)
 		return
 	}
 
-	logger.Printf("[Refund] Refund TX: %s\n", txid)
-	rpc.AddLog("Refund TX: " + txid.TXID)
+	rpc.PrintLog("[Grokked] Refund TX: %s", txid)
 
 	return txid.TXID
 }
@@ -261,12 +254,11 @@ func UploadContract(owner bool) (tx string) {
 	}
 
 	if err := rpcClientW.CallFor(ctx, &txid, "transfer", params); err != nil {
-		logger.Errorln("[UploadContract]", err)
+		rpc.PrintError("[Grokked] Upload: %s", err)
 		return
 	}
 
-	logger.Println("[UploadContract] TXID:", txid)
-	rpc.AddLog("Upload Grokked SC: " + txid.TXID)
+	rpc.PrintLog("[Grokked] Upload TX: %s", txid)
 
 	return txid.TXID
 }
