@@ -24,7 +24,7 @@ func Set(amt, dur uint64) (tx string) {
 
 	t := []dero.Transfer{t1}
 	txid := dero.Transfer_Result{}
-	fee := rpc.GasEstimate(GROKSCID, "[Set]", args, t, rpc.LowLimitFee)
+	fee := rpc.GasEstimate(GROKSCID, "[Grokked]", args, t, rpc.LowLimitFee)
 	params := &dero.Transfer_Params{
 		Transfers: t,
 		SC_ID:     GROKSCID,
@@ -58,7 +58,7 @@ func Join(amt uint64) (tx string) {
 
 	t := []dero.Transfer{t1}
 	txid := dero.Transfer_Result{}
-	fee := rpc.GasEstimate(GROKSCID, "[Join]", args, t, rpc.LowLimitFee)
+	fee := rpc.GasEstimate(GROKSCID, "[Grokked]", args, t, rpc.LowLimitFee)
 	params := &dero.Transfer_Params{
 		Transfers: t,
 		SC_ID:     GROKSCID,
@@ -86,7 +86,7 @@ func Start() (tx string) {
 
 	t := []dero.Transfer{}
 	txid := dero.Transfer_Result{}
-	fee := rpc.GasEstimate(GROKSCID, "[Start]", args, t, rpc.LowLimitFee)
+	fee := rpc.GasEstimate(GROKSCID, "[Grokked]", args, t, rpc.LowLimitFee)
 	params := &dero.Transfer_Params{
 		Transfers: t,
 		SC_ID:     GROKSCID,
@@ -114,7 +114,7 @@ func Pass() (tx string) {
 
 	t := []dero.Transfer{}
 	txid := dero.Transfer_Result{}
-	fee := rpc.GasEstimate(GROKSCID, "[Pass]", args, t, rpc.LowLimitFee)
+	fee := rpc.GasEstimate(GROKSCID, "[Grokked]", args, t, rpc.LowLimitFee)
 	params := &dero.Transfer_Params{
 		Transfers: t,
 		SC_ID:     GROKSCID,
@@ -173,7 +173,7 @@ func Win(a uint64) (tx string) {
 
 	t := []dero.Transfer{}
 	txid := dero.Transfer_Result{}
-	fee := rpc.GasEstimate(GROKSCID, "[Win]", args, t, rpc.LowLimitFee)
+	fee := rpc.GasEstimate(GROKSCID, "[Grokked]", args, t, rpc.LowLimitFee)
 	params := &dero.Transfer_Params{
 		Transfers: t,
 		SC_ID:     GROKSCID,
@@ -204,7 +204,7 @@ func Refund(p uint64) (tx string) {
 
 	t := []dero.Transfer{}
 	txid := dero.Transfer_Result{}
-	fee := rpc.GasEstimate(GROKSCID, "[Refund]", args, t, rpc.LowLimitFee)
+	fee := rpc.GasEstimate(GROKSCID, "[Grokked]", args, t, rpc.LowLimitFee)
 	params := &dero.Transfer_Params{
 		Transfers: t,
 		SC_ID:     GROKSCID,
@@ -230,7 +230,7 @@ func UploadContract(owner bool) (tx string) {
 
 	code := rpc.GetSCCode(GROKSCID)
 	if code == "" {
-		logger.Errorln("[UploadContract] Error getting Grokked SC")
+		rpc.PrintError("[Grokked] Upload: error getting Grokked SC")
 		return
 	}
 
