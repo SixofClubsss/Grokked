@@ -227,15 +227,24 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 	join_button.Hide()
 
 	// Grok owner button, payout all players still in game
-	grok_button := widget.NewButton("Grok", nil)
-	grok_button.OnTapped = func() {
+	grok_owner_button := widget.NewButton("Grok", nil)
+	grok_owner_button.OnTapped = func() {
 		num := uint64(99)
-		for i := uint64(0); i < 31; i++ {
-			var v []*structures.SCIDVariable
-			if addr, _, _ := menu.Gnomes.Indexer.GetSCIDValuesByKey(v, scid, i, menu.Gnomes.Indexer.ChainHeight); addr != nil {
-				if addr[0] == rpc.Wallet.Address {
-					num = i
-					break
+		if menu.Gnomes.IsReady() {
+			// If waiting for payout use grok for Refund
+			if _, in := menu.Gnomes.GetSCIDValuesByKey(scid, "in"); in != nil && in[0] == 1 {
+				if _, winner := menu.Gnomes.GetSCIDValuesByKey(scid, "grok"); winner != nil {
+					num = winner[0]
+				}
+			} else {
+				for i := uint64(0); i < 31; i++ {
+					var v []*structures.SCIDVariable
+					if addr, _, _ := menu.Gnomes.Indexer.GetSCIDValuesByKey(v, scid, i, menu.Gnomes.Indexer.ChainHeight); addr != nil {
+						if addr[0] == rpc.Wallet.Address {
+							num = i
+							break
+						}
+					}
 				}
 			}
 		}
@@ -256,9 +265,62 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 				}
 			}, d.Window).Show()
 		}
+	}
+	grok_owner_button.Hide()
 
+	// Owner button to Grok player
+	grok_button := widget.NewButton("Grok", nil)
+	grok_button.OnTapped = func() {
+		dialog.NewConfirm("Grokked", "Grok Player?", func(b bool) {
+			if b {
+				go func() {
+					if tx := Grokked(); tx != "" {
+						label.SetText("Confirming Grokked TX...")
+						confirming = true
+						disableFunc()
+						rpc.ConfirmTx(tx, "Grokked", 90)
+						time.Sleep(time.Second)
+					}
+					confirmed <- true
+				}()
+			}
+		}, d.Window).Show()
 	}
 	grok_button.Hide()
+
+	// Payout when last player standing
+	pay_button := widget.NewButton("Pay", nil)
+	pay_button.OnTapped = func() {
+		if menu.Gnomes.IsReady() {
+			if _, in := menu.Gnomes.GetSCIDValuesByKey(scid, "in"); in != nil {
+				if _, u := menu.Gnomes.GetSCIDValuesByKey(scid, "grok"); u != nil {
+					if addr, _ := menu.Gnomes.GetSCIDValuesByKey(scid, u[0]); addr != nil {
+						dialog.NewConfirm("Pay winner", fmt.Sprintf("Pay %s", addr[0]), func(b bool) {
+							if b {
+								go func() {
+									switch in[0] {
+									case 1:
+										if tx := Win(u[0]); tx != "" {
+											label.SetText("Confirming Payout TX...")
+											confirming = true
+											disableFunc()
+											rpc.ConfirmTx(tx, "Grokked", 90)
+											time.Sleep(time.Second)
+										}
+									default:
+										dialog.NewInformation("To Many Players", "There are still more players to be Grokked", d.Window).Show()
+									}
+
+									confirmed <- true
+								}()
+							}
+						}, d.Window).Show()
+					}
+				}
+			}
+		}
+	}
+	pay_button.Hide()
 
 	disableFunc = func() {
 		start_button.Hide()
@@ -266,9 +328,11 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 		start_button.Hide()
 		set_box.Hide()
 		pass_button.Hide()
+		pay_button.Hide()
 		unlock_button.Hide()
 		new_button.Hide()
 		grok_button.Hide()
+		grok_owner_button.Hide()
 	}
 
 	// Main process for Grokked
@@ -303,11 +367,11 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 					}
 				} else {
 					if isOwner {
-						new_button.Show()
 						unlock_button.Hide()
+						new_button.Show()
 					} else {
-						unlock_button.Show()
 						new_button.Hide()
+						unlock_button.Show()
 					}
 				}
 
@@ -359,8 +423,10 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 						case 0:
 							// Waiting for owner to set game
 							grok_button.Hide()
+							grok_owner_button.Hide()
 							join_button.Hide()
 							pass_button.Hide()
+							pay_button.Hide()
 							if owned {
 								if !confirming {
 									set_box.Show()
@@ -374,7 +440,15 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 						case 1:
 							// Game is set, waiting for players to join or owner to start game
 							grok_button.Hide()
+							grok_owner_button.Hide()
 							pass_button.Hide()
+							pay_button.Hide()
+							set_box.Hide()
+							var players uint64
+							_, in := menu.Gnomes.GetSCIDValuesByKey(scid, "in")
+							if in != nil {
+								players = in[0]
+							}
 							if !playing {
 								if !confirming {
 									join_button.Show()
@@ -386,17 +460,21 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 								join_button.Hide()
 								ind.Resource = resourceJediJpg
 								ind.Refresh()
-								label.SetText("Waiting for owner to start the game...")
+								if players < 3 {
+									label.SetText(fmt.Sprintf("Waiting for %d more player(s)...", 3-players))
+								} else {
+									label.SetText(fmt.Sprintf("%d players in, waiting for owner to start the game...", players))
+								}
 							}
 
 							if owned {
 								if !confirming {
-									start_button.Show()
+									if players > 2 {
+										start_button.Show()
+									}
 								}
-								set_box.Hide()
 							} else {
 								start_button.Hide()
-								set_box.Hide()
 							}
 
 							// Grok owner and refund if game hasn't started for 48hrs
@@ -404,13 +482,13 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 								now := uint64(time.Now().Unix())
 								if now > last[0]+173400 {
 									if !confirming {
-										grok_button.Show()
+										grok_owner_button.Show()
 									} else {
-										grok_button.Hide()
+										grok_owner_button.Hide()
 										label.SetText("Confirming Grokked TX...")
 									}
 								} else {
-									grok_button.Hide()
+									grok_owner_button.Hide()
 								}
 							}
 						case 2:
@@ -422,6 +500,7 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 									if addr, _ := menu.Gnomes.GetSCIDValuesByKey(scid, u[0]); addr != nil {
 										// If only one player left, win situation
 										if in[0] == 1 {
+											grok_button.Hide()
 											var amt uint64
 											_, pot := menu.Gnomes.GetSCIDValuesByKey(scid, "pot")
 											if pot != nil {
@@ -429,15 +508,43 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 											}
 
 											if addr[0] != rpc.Wallet.Address {
-												label.SetText(fmt.Sprintf("Try harder Grok, Winner is %d, (%s DERO)\n(%s)\n\n", u[0], rpc.FromAtomic(amt, 5), addr[0]))
+												label.SetText(fmt.Sprintf("Try harder Grok, Winner is %d, (%s DERO)\n(%s)", u[0], rpc.FromAtomic(amt, 5), addr[0]))
 												ind.Resource = resourceGrokJpg
 												ind.Refresh()
 											} else {
-												label.SetText(fmt.Sprintf("Well done Jedi, You are the winner of this round, (%s DERO)\n(%s)\n\n", rpc.FromAtomic(amt, 5), addr[0]))
+												label.SetText(fmt.Sprintf("Well done Jedi, You are the winner of this round, (%s DERO)\n(%s)", rpc.FromAtomic(amt, 5), addr[0]))
 												ind.Resource = resourceJediJpg
 												ind.Refresh()
 											}
-											pass_button.Hide()
+
+											// Grok the owner
+											_, last := menu.Gnomes.GetSCIDValuesByKey(scid, "last")
+											_, dur := menu.Gnomes.GetSCIDValuesByKey(scid, "duration")
+											if last != nil && dur != nil {
+												now := uint64(time.Now().Unix())
+												if now > last[0]+dur[0]+600 {
+													if !confirming {
+														grok_owner_button.Show()
+													} else {
+														grok_owner_button.Hide()
+														label.SetText("Confirming Grok TX...")
+													}
+												} else {
+													grok_owner_button.Hide()
+												}
+											}
+
+											// Payout
+											if owned {
+												if !confirming {
+													pay_button.Show()
+												} else {
+													pay_button.Hide()
+													label.SetText("Confirming Pay TX...")
+												}
+											} else {
+												pay_button.Hide()
+											}
 										} else {
 											// Find Grok time frame
 											var tf uint64
@@ -453,7 +560,24 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 												} else if tf != 0 {
 													overdue = true
 													left = fmt.Sprintf("%d minutes past", (now-tf)/60)
+													if owned {
+														if !confirming {
+															grok_button.Show()
+														} else {
+															grok_button.Hide()
+															label.SetText("Confirming Grok TX...")
+														}
+													} else {
+														grok_button.Hide()
+													}
 												}
+											}
+
+											var owner_overdue string
+											if now < tf+600 {
+												owner_overdue = fmt.Sprintf("Can Grok owner in %d minutes", ((tf+600)-now)/60)
+											} else {
+												owner_overdue = "You can Grok the owner"
 											}
 
 											// Grok image and text
@@ -466,7 +590,7 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 														label.SetText(fmt.Sprintf("You are the Grok, %d, better pass soon (%s)\n\n", u[0], left))
 													} else {
 														pass_button.Hide()
-														label.SetText(fmt.Sprintf("Waiting to be Grokked\n\nYou weren't paying enough attention %d, (%s)\n\n", u[0], left))
+														label.SetText(fmt.Sprintf("Waiting to be Grokked\n\nYou weren't paying enough attention %d, (%s)\n\n%s", u[0], left, owner_overdue))
 													}
 												} else {
 													label.SetText("Confirming Pass TX...")
@@ -475,18 +599,13 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 												if playing {
 													ind.Resource = resourceJediJpg
 													ind.Refresh()
-													var owner_overdue string
-													if now < tf+600 {
-														owner_overdue = fmt.Sprintf("Can Grok owner in %d minutes", ((tf+600)-now)/60)
-													} else {
-														owner_overdue = "You can Grok the owner"
-													}
+
 													label.SetText(fmt.Sprintf("Well done Jedi, Grok is %d, (%s)\n\n%s", u[0], left, owner_overdue))
 												} else {
 													ind.Resource = resourceGrokJpg
 													ind.Refresh()
 													label.SetText("You've been Grokked, pay more attention next time...")
-													grok_button.Hide()
+													grok_owner_button.Hide()
 												}
 
 												pass_button.Hide()
@@ -495,13 +614,13 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 											// Grok the owner
 											if now > tf+600 {
 												if !confirming {
-													grok_button.Show()
+													grok_owner_button.Show()
 												} else {
-													grok_button.Hide()
+													grok_owner_button.Hide()
 													label.SetText("Confirming Grok TX...")
 												}
 											} else {
-												grok_button.Hide()
+												grok_owner_button.Hide()
 											}
 										}
 									}
@@ -525,20 +644,27 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 	}()
 
 	return container.NewBorder(
-		container.NewBorder(container.NewCenter(container.NewVBox(show_opt, contract_select)), label, nil, nil, container.NewCenter(ind)),
+		container.NewBorder(container.NewCenter(container.NewVBox(show_opt, contract_select)), container.NewCenter(label), nil, nil, container.NewCenter(ind)),
 		container.NewVBox(
 			container.NewCenter(unlock_button),
+			layout.NewSpacer(),
 			container.NewCenter(new_button)),
 		nil,
 		nil,
 		container.NewVBox(
+			container.NewVBox(container.NewCenter(players_select)),
 			layout.NewSpacer(),
-			container.NewCenter(players_select),
-			container.NewCenter(set_box),
-			container.NewCenter(start_button),
-			container.NewCenter(grok_button),
-			container.NewCenter(join_button),
-			container.NewCenter(pass_button),
+			container.NewVBox(
+				container.NewCenter(set_box),
+				container.NewCenter(start_button),
+				container.NewCenter(grok_button),
+				container.NewCenter(grok_owner_button),
+				container.NewCenter(join_button),
+				container.NewCenter(pass_button),
+				container.NewCenter(pay_button),
+				layout.NewSpacer(),
+			),
+			layout.NewSpacer(),
 			layout.NewSpacer()))
 }
 

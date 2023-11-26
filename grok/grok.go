@@ -43,7 +43,7 @@ func RunGrokker() {
 	n := runtime.NumCPU()
 	runtime.GOMAXPROCS(n)
 
-	arguments, err := docopt.ParseArgs(command_line, nil, rpc.Version().String())
+	arguments, err := docopt.ParseArgs(command_line, nil, version.String())
 
 	if err != nil {
 		logger.Fatalf("Error while parsing arguments: %s\n", err)
@@ -125,7 +125,7 @@ func RunGrokker() {
 	// Check for wallet connection
 	rpc.GetAddress("Grokker")
 	if !rpc.Wallet.Connect {
-		os.Exit(1)
+		logger.Fatalf("[Grokker] Wallet %s not connected\n", rpc.Wallet.Rpc)
 	}
 
 	// Handle ctrl-c close
