@@ -8,6 +8,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/blang/semver/v4"
 	"github.com/civilware/Gnomon/structures"
 	"github.com/dReam-dApps/dReams/menu"
 	"github.com/dReam-dApps/dReams/rpc"
@@ -18,6 +19,8 @@ import (
 const GROKSCID = "80c093dc0def477ea962164bbf86432ccde656bfe4d91c9413dfa80c858f8ff1"
 
 var logger = structures.Logger.WithFields(logrus.Fields{})
+
+var version = semver.MustParse("0.1.0-dev")
 
 var command_line string = `Grokker
 Grokker app, powered by Gnomon and dReams.
@@ -40,8 +43,7 @@ func RunGrokker() {
 	n := runtime.NumCPU()
 	runtime.GOMAXPROCS(n)
 
-	version := rpc.DREAMSv
-	arguments, err := docopt.ParseArgs(command_line, nil, version)
+	arguments, err := docopt.ParseArgs(command_line, nil, rpc.Version().String())
 
 	if err != nil {
 		logger.Fatalf("Error while parsing arguments: %s\n", err)
@@ -112,7 +114,7 @@ func RunGrokker() {
 	menu.Gnomes.Fast = fastsync
 	menu.Gnomes.Para = parallel
 
-	logger.Println("[Grokker]", version, runtime.GOOS, runtime.GOARCH)
+	logger.Println("[Grokker]", version.String(), runtime.GOOS, runtime.GOARCH)
 
 	// Check for daemon connection
 	rpc.Ping()
