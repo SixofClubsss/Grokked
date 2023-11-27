@@ -22,6 +22,43 @@ var logger = structures.Logger.WithFields(logrus.Fields{})
 
 var version = semver.MustParse("0.1.0-dev")
 
+// Menu intro for dReams app
+func DreamsMenuIntro() (entries map[string][]string) {
+	entries = map[string][]string{
+		"Grokked": {
+			"Proof of attention game",
+			"Players can prove they are not a Grok by paying attention to the Dero network and being the last player standing",
+			"They do this by watching and interacting with a smart contract",
+			"Players can launch their own contracts and be playing on many contracts at once",
+			"All contracts have leader boards to track who is not a Grok",
+			"How to play",
+			"How to install and run a game"},
+
+		"How to play": {
+			"Connect to your Dero wallet and daemon",
+			"Select the All button to view all public SCID options",
+			"Select one from the drop down",
+			"If the owner is not a Grok and is ready to play you can click Join",
+			"Once enough players have joined the owner can start the game",
+			"A player will be randomly selected as the Grok",
+			"If they do not press the pass button within the given time they will be Grokked (eliminated)",
+			"The time frame to pass gets shorter each time it is passed or someone is eliminated",
+			"Last player standing wins, splitting the pot with the owner of the contract",
+			"The owner is in charge of Grokking, if they aren't paying attention players can Grok the owner and give all remaining players a win a share of the pot"},
+
+		"How to install and run a game": {
+			"Click on Unlock SC to your first contract",
+			"There is a 1.00000 DERO donation to perform this action, becoming a Grokked owner give you unlimited access to Grokked installs and future updates",
+			"Select the Owned button to view your owned contracts",
+			"Select one from the drop down",
+			"Set the entry amount in DERO and time frame to pass",
+			"Once 3 or more players have joined you can start the game",
+			"You can Grok players from the UI, or use the Grokker CLI app to run a more lightweight process for owner controls"},
+	}
+
+	return
+}
+
 var command_line string = `Grokker
 Grokker app, powered by Gnomon and dReams.
 
