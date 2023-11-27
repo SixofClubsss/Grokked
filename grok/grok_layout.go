@@ -142,7 +142,7 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 			if b {
 				go func() {
 					seconds := rpc.Uint64Type(set_dur.Text) * 60
-					if tx := Set(rpc.ToAtomic(set_amt.Text, 5), seconds); tx != "" {
+					if tx := Set(scid, rpc.ToAtomic(set_amt.Text, 5), seconds); tx != "" {
 						label.SetText("Confirming Set TX...")
 						confirming = true
 						disableFunc()
@@ -162,7 +162,7 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 		dialog.NewConfirm("Start", "Start this game?", func(b bool) {
 			if b {
 				go func() {
-					if tx := Start(); tx != "" {
+					if tx := Start(scid); tx != "" {
 						label.SetText("Confirming Start TX...")
 						confirming = true
 						disableFunc()
@@ -186,7 +186,7 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 		dialog.NewConfirm("Pass", "Pass Grok to new player", func(b bool) {
 			if b {
 				go func() {
-					if tx := Pass(); tx != "" {
+					if tx := Pass(scid); tx != "" {
 						label.SetText("Confirming Pass TX...")
 						confirming = true
 						disableFunc()
@@ -207,7 +207,7 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 			dialog.NewConfirm("Join Game", fmt.Sprintf("Entry is %s DERO", rpc.FromAtomic(amt[0], 5)), func(b bool) {
 				if b {
 					go func() {
-						if tx := Join(amt[0]); tx != "" {
+						if tx := Join(scid, amt[0]); tx != "" {
 							confirming = true
 							label.SetText("Confirming Join TX...")
 							disableFunc()
@@ -253,7 +253,7 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 			dialog.NewConfirm("Grokked", "Grok owner?", func(b bool) {
 				if b {
 					go func() {
-						if tx := Refund(num); tx != "" {
+						if tx := Refund(scid, num); tx != "" {
 							label.SetText("Confirming Grokked TX...")
 							confirming = true
 							disableFunc()
@@ -274,7 +274,7 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 		dialog.NewConfirm("Grokked", "Grok Player?", func(b bool) {
 			if b {
 				go func() {
-					if tx := Grokked(); tx != "" {
+					if tx := Grokked(scid); tx != "" {
 						label.SetText("Confirming Grokked TX...")
 						confirming = true
 						disableFunc()
@@ -300,7 +300,7 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 								go func() {
 									switch in[0] {
 									case 1:
-										if tx := Win(u[0]); tx != "" {
+										if tx := Win(scid, u[0]); tx != "" {
 											label.SetText("Confirming Payout TX...")
 											confirming = true
 											disableFunc()

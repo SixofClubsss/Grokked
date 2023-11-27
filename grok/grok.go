@@ -16,7 +16,8 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-const GROKSCID = "80c093dc0def477ea962164bbf86432ccde656bfe4d91c9413dfa80c858f8ff1"
+// const GROKSCID = "80c093dc0def477ea962164bbf86432ccde656bfe4d91c9413dfa80c858f8ff1"
+const GROKSCID = "a3e6a008d760c7b98471f27402f5539cafdfffdde2311174604023a7903a08dc"
 
 var logger = structures.Logger.WithFields(logrus.Fields{})
 
@@ -177,7 +178,7 @@ func RunGrokker() {
 		logger.Println("[Grokker] Closing...")
 	}()
 
-	// Set up Gnomon search filters for Duel
+	// Set up Gnomon search filters for Grokked SCIDs
 	filter := []string{rpc.GetSCCode(GROKSCID)}
 
 	// Set up SCID rating map
@@ -242,7 +243,7 @@ func RunGrokker() {
 	// Start Grokker
 	for !menu.ClosingApps() {
 		time.Sleep(3 * time.Second)
-		if _, u := menu.Gnomes.GetSCIDValuesByKey(GROKSCID, "start"); u != nil {
+		if _, u := menu.Gnomes.GetSCIDValuesByKey(scid, "start"); u != nil {
 			switch u[0] {
 			case 0:
 				if !firstCase {
@@ -265,17 +266,17 @@ func RunGrokker() {
 					continue
 				}
 
-				if _, in := menu.Gnomes.GetSCIDValuesByKey(GROKSCID, "in"); in != nil {
-					if _, u := menu.Gnomes.GetSCIDValuesByKey(GROKSCID, "grok"); u != nil {
+				if _, in := menu.Gnomes.GetSCIDValuesByKey(scid, "in"); in != nil {
+					if _, u := menu.Gnomes.GetSCIDValuesByKey(scid, "grok"); u != nil {
 						if u[0] != grok {
 							grok = u[0]
 							clock = uint64(9999673725)
 							logger.Printf("[Grokker] Grok is %d", grok)
 						}
-						if addr, _ := menu.Gnomes.GetSCIDValuesByKey(GROKSCID, u[0]); addr != nil {
+						if addr, _ := menu.Gnomes.GetSCIDValuesByKey(scid, u[0]); addr != nil {
 							switch in[0] {
 							case 1:
-								if tx := Win(u[0]); tx != "" {
+								if tx := Win(scid, u[0]); tx != "" {
 									rpc.ConfirmTx(tx, "Grokker", 90)
 									time.Sleep(time.Second)
 									buffer = true
@@ -283,13 +284,13 @@ func RunGrokker() {
 							default:
 								var tf uint64
 								now := uint64(time.Now().Unix())
-								_, last := menu.Gnomes.GetSCIDValuesByKey(GROKSCID, "last")
-								_, dur := menu.Gnomes.GetSCIDValuesByKey(GROKSCID, "duration")
+								_, last := menu.Gnomes.GetSCIDValuesByKey(scid, "last")
+								_, dur := menu.Gnomes.GetSCIDValuesByKey(scid, "duration")
 								if last != nil && dur != nil {
 									tf = last[0] + dur[0]
 									if now > tf+10 {
 										logger.Printf("[Grokker] Grokking %d, %d minutes past", u[0], (now-tf)/60)
-										if tx := Grokked(); tx != "" {
+										if tx := Grokked(scid); tx != "" {
 											rpc.ConfirmTx(tx, "Grokker", 90)
 											time.Sleep(time.Second)
 											buffer = true

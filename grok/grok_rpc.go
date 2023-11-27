@@ -6,7 +6,7 @@ import (
 )
 
 // Owner sets entry amount and pass duration
-func Set(amt, dur uint64) (tx string) {
+func Set(scid string, amt, dur uint64) (tx string) {
 	rpcClientW, ctx, cancel := rpc.SetWalletClient(rpc.Wallet.Rpc, rpc.Wallet.UserPass)
 	defer cancel()
 
@@ -24,10 +24,10 @@ func Set(amt, dur uint64) (tx string) {
 
 	t := []dero.Transfer{t1}
 	txid := dero.Transfer_Result{}
-	fee := rpc.GasEstimate(GROKSCID, "[Grokked]", args, t, rpc.LowLimitFee)
+	fee := rpc.GasEstimate(scid, "[Grokked]", args, t, rpc.LowLimitFee)
 	params := &dero.Transfer_Params{
 		Transfers: t,
-		SC_ID:     GROKSCID,
+		SC_ID:     scid,
 		SC_RPC:    args,
 		Ringsize:  2,
 		Fees:      fee,
@@ -44,7 +44,7 @@ func Set(amt, dur uint64) (tx string) {
 }
 
 // Players join a set game
-func Join(amt uint64) (tx string) {
+func Join(scid string, amt uint64) (tx string) {
 	rpcClientW, ctx, cancel := rpc.SetWalletClient(rpc.Wallet.Rpc, rpc.Wallet.UserPass)
 	defer cancel()
 
@@ -58,10 +58,10 @@ func Join(amt uint64) (tx string) {
 
 	t := []dero.Transfer{t1}
 	txid := dero.Transfer_Result{}
-	fee := rpc.GasEstimate(GROKSCID, "[Grokked]", args, t, rpc.LowLimitFee)
+	fee := rpc.GasEstimate(scid, "[Grokked]", args, t, rpc.LowLimitFee)
 	params := &dero.Transfer_Params{
 		Transfers: t,
-		SC_ID:     GROKSCID,
+		SC_ID:     scid,
 		SC_RPC:    args,
 		Ringsize:  2,
 		Fees:      fee,
@@ -78,7 +78,7 @@ func Join(amt uint64) (tx string) {
 }
 
 // Owner starts the game, must have 3+ players
-func Start() (tx string) {
+func Start(scid string) (tx string) {
 	rpcClientW, ctx, cancel := rpc.SetWalletClient(rpc.Wallet.Rpc, rpc.Wallet.UserPass)
 	defer cancel()
 
@@ -86,10 +86,10 @@ func Start() (tx string) {
 
 	t := []dero.Transfer{}
 	txid := dero.Transfer_Result{}
-	fee := rpc.GasEstimate(GROKSCID, "[Grokked]", args, t, rpc.LowLimitFee)
+	fee := rpc.GasEstimate(scid, "[Grokked]", args, t, rpc.LowLimitFee)
 	params := &dero.Transfer_Params{
 		Transfers: t,
-		SC_ID:     GROKSCID,
+		SC_ID:     scid,
 		SC_RPC:    args,
 		Ringsize:  2,
 		Fees:      fee,
@@ -106,7 +106,7 @@ func Start() (tx string) {
 }
 
 // Pass the Grok to another player
-func Pass() (tx string) {
+func Pass(scid string) (tx string) {
 	rpcClientW, ctx, cancel := rpc.SetWalletClient(rpc.Wallet.Rpc, rpc.Wallet.UserPass)
 	defer cancel()
 
@@ -114,10 +114,10 @@ func Pass() (tx string) {
 
 	t := []dero.Transfer{}
 	txid := dero.Transfer_Result{}
-	fee := rpc.GasEstimate(GROKSCID, "[Grokked]", args, t, rpc.LowLimitFee)
+	fee := rpc.GasEstimate(scid, "[Grokked]", args, t, rpc.LowLimitFee)
 	params := &dero.Transfer_Params{
 		Transfers: t,
-		SC_ID:     GROKSCID,
+		SC_ID:     scid,
 		SC_RPC:    args,
 		Ringsize:  2,
 		Fees:      fee,
@@ -134,7 +134,7 @@ func Pass() (tx string) {
 }
 
 // Grok player for not paying attention
-func Grokked() (tx string) {
+func Grokked(scid string) (tx string) {
 	rpcClientW, ctx, cancel := rpc.SetWalletClient(rpc.Wallet.Rpc, rpc.Wallet.UserPass)
 	defer cancel()
 
@@ -142,10 +142,10 @@ func Grokked() (tx string) {
 
 	t := []dero.Transfer{}
 	txid := dero.Transfer_Result{}
-	fee := rpc.GasEstimate(GROKSCID, "[Grokked]", args, t, rpc.LowLimitFee)
+	fee := rpc.GasEstimate(scid, "[Grokked]", args, t, rpc.LowLimitFee)
 	params := &dero.Transfer_Params{
 		Transfers: t,
-		SC_ID:     GROKSCID,
+		SC_ID:     scid,
 		SC_RPC:    args,
 		Ringsize:  2,
 		Fees:      fee,
@@ -162,7 +162,7 @@ func Grokked() (tx string) {
 }
 
 // Win scenario when one player left
-func Win(a uint64) (tx string) {
+func Win(scid string, a uint64) (tx string) {
 	rpcClientW, ctx, cancel := rpc.SetWalletClient(rpc.Wallet.Rpc, rpc.Wallet.UserPass)
 	defer cancel()
 
@@ -173,10 +173,10 @@ func Win(a uint64) (tx string) {
 
 	t := []dero.Transfer{}
 	txid := dero.Transfer_Result{}
-	fee := rpc.GasEstimate(GROKSCID, "[Grokked]", args, t, rpc.LowLimitFee)
+	fee := rpc.GasEstimate(scid, "[Grokked]", args, t, rpc.LowLimitFee)
 	params := &dero.Transfer_Params{
 		Transfers: t,
-		SC_ID:     GROKSCID,
+		SC_ID:     scid,
 		SC_RPC:    args,
 		Ringsize:  2,
 		Fees:      fee,
@@ -193,7 +193,7 @@ func Win(a uint64) (tx string) {
 }
 
 // Grok the SC owner and payout all players
-func Refund(p uint64) (tx string) {
+func Refund(scid string, p uint64) (tx string) {
 	rpcClientW, ctx, cancel := rpc.SetWalletClient(rpc.Wallet.Rpc, rpc.Wallet.UserPass)
 	defer cancel()
 
@@ -204,10 +204,10 @@ func Refund(p uint64) (tx string) {
 
 	t := []dero.Transfer{}
 	txid := dero.Transfer_Result{}
-	fee := rpc.GasEstimate(GROKSCID, "[Grokked]", args, t, rpc.LowLimitFee)
+	fee := rpc.GasEstimate(scid, "[Grokked]", args, t, rpc.LowLimitFee)
 	params := &dero.Transfer_Params{
 		Transfers: t,
-		SC_ID:     GROKSCID,
+		SC_ID:     scid,
 		SC_RPC:    args,
 		Ringsize:  2,
 		Fees:      fee,
