@@ -556,6 +556,7 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 											if last != nil && dur != nil {
 												tf = last[0] + dur[0]
 												if now < tf {
+													grok_button.Hide()
 													left = fmt.Sprintf("%d minutes left", (tf-now)/60)
 												} else if tf != 0 {
 													overdue = true
@@ -672,31 +673,32 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 func createGrokkedList(owned bool) (options []string, owner bool) {
 	if menu.Gnomes.IsReady() {
 		scids := menu.Gnomes.GetAllOwnersAndSCIDs()
+		_, check := menu.Gnomes.GetSCIDValuesByKey(GROKSCID, "v")
+		if check == nil {
+			return
+		}
+
 		for scid := range scids {
 			if !menu.Gnomes.IsReady() {
 				break
 			}
 
-			if _, join := menu.Gnomes.GetSCIDValuesByKey(scid, "joined"); join != nil {
-				if _, start := menu.Gnomes.GetSCIDValuesByKey(scid, "start"); start != nil {
-					if _, last := menu.Gnomes.GetSCIDValuesByKey(scid, "last"); last != nil {
-						_, version := menu.Gnomes.GetSCIDValuesByKey(scid, "v")
-						if version != nil {
-							if _, check := menu.Gnomes.GetSCIDValuesByKey(GROKSCID, "v"); check != nil {
-								if owned {
-									o, _ := menu.Gnomes.GetSCIDValuesByKey(scid, "owner")
-									if o != nil {
-										if o[0] == rpc.Wallet.Address {
-											owner = true
-											options = append(options, scid)
-											continue
-										}
-									}
-								} else {
-									if version[0] == check[0] {
-										options = append(options, scid)
-										continue
-									}
+			if _, start := menu.Gnomes.GetSCIDValuesByKey(scid, "start"); start != nil {
+				if _, version := menu.Gnomes.GetSCIDValuesByKey(scid, "v"); version != nil {
+					if owned {
+						if o, _ := menu.Gnomes.GetSCIDValuesByKey(scid, "owner"); o != nil {
+							if o[0] == rpc.Wallet.Address {
+								owner = true
+								options = append(options, scid)
+								continue
+							}
+						}
+					} else {
+						if _, join := menu.Gnomes.GetSCIDValuesByKey(scid, "joined"); join != nil {
+							if _, last := menu.Gnomes.GetSCIDValuesByKey(scid, "last"); last != nil {
+								if version[0] == check[0] {
+									options = append(options, scid)
+									continue
 								}
 							}
 						}

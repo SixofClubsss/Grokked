@@ -44,7 +44,7 @@ func DreamsMenuIntro() (entries map[string][]string) {
 			"A player will be randomly selected as the Grok",
 			"If they do not press the pass button within the given time they will be Grokked (eliminated)",
 			"The time frame to pass gets shorter each time it is passed or someone is eliminated",
-			"Last player standing wins, splitting the pot with the owner of the contract",
+			"Last player standing wins, splitting the pot with the owner of the contract (if the owner is paying attention)",
 			"The owner is in charge of Grokking, if they aren't paying attention players can Grok the owner and give all remaining players a win a share of the pot"},
 
 		"How to install and run a game": {
@@ -271,11 +271,12 @@ func RunGrokker() {
 						if u[0] != grok {
 							grok = u[0]
 							clock = uint64(9999673725)
-							logger.Printf("[Grokker] Grok is %d", grok)
+							logger.Printf("[Grokker] %d player(s) in, Grok is %d\n", in[0], grok)
 						}
 						if addr, _ := menu.Gnomes.GetSCIDValuesByKey(scid, u[0]); addr != nil {
 							switch in[0] {
 							case 1:
+								logger.Println("[Grokker] Last player standing, paying out", addr[0])
 								if tx := Win(scid, u[0]); tx != "" {
 									rpc.ConfirmTx(tx, "Grokker", 90)
 									time.Sleep(time.Second)
@@ -289,7 +290,7 @@ func RunGrokker() {
 								if last != nil && dur != nil {
 									tf = last[0] + dur[0]
 									if now > tf+10 {
-										logger.Printf("[Grokker] Grokking %d, %d minutes past", u[0], (now-tf)/60)
+										logger.Printf("[Grokker] Grokking %d, %d minutes past\n", u[0], (now-tf)/60)
 										if tx := Grokked(scid); tx != "" {
 											rpc.ConfirmTx(tx, "Grokker", 90)
 											time.Sleep(time.Second)
