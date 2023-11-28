@@ -682,21 +682,21 @@ func createGrokkedList(owned bool) (options []string, owner bool) {
 					if _, last := menu.Gnomes.GetSCIDValuesByKey(scid, "last"); last != nil {
 						_, version := menu.Gnomes.GetSCIDValuesByKey(scid, "v")
 						if version != nil {
-							v := version[0]
-
-							if owned {
-								o, _ := menu.Gnomes.GetSCIDValuesByKey(scid, "owner")
-								if o != nil {
-									if o[0] == rpc.Wallet.Address {
-										owner = true
+							if _, check := menu.Gnomes.GetSCIDValuesByKey(GROKSCID, "v"); check != nil {
+								if owned {
+									o, _ := menu.Gnomes.GetSCIDValuesByKey(scid, "owner")
+									if o != nil {
+										if o[0] == rpc.Wallet.Address {
+											owner = true
+											options = append(options, scid)
+											continue
+										}
+									}
+								} else {
+									if version[0] == check[0] {
 										options = append(options, scid)
 										continue
 									}
-								}
-							} else {
-								if v > 1 {
-									options = append(options, scid)
-									continue
 								}
 							}
 						}
