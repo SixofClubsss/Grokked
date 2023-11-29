@@ -23,6 +23,11 @@ var logger = structures.Logger.WithFields(logrus.Fields{})
 
 var version = semver.MustParse("0.1.0-dev")
 
+// Check grok package version
+func Version() semver.Version {
+	return version
+}
+
 // Menu intro for dReams app
 func DreamsMenuIntro() (entries map[string][]string) {
 	entries = map[string][]string{
