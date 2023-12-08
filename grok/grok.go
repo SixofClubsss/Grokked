@@ -10,6 +10,7 @@ import (
 
 	"github.com/blang/semver/v4"
 	"github.com/civilware/Gnomon/structures"
+	"github.com/dReam-dApps/dReams/gnomes"
 	"github.com/dReam-dApps/dReams/menu"
 	"github.com/dReam-dApps/dReams/rpc"
 	"github.com/docopt/docopt-go"
@@ -22,6 +23,7 @@ const GROKSCID = "a3e6a008d760c7b98471f27402f5539cafdfffdde2311174604023a7903a08
 var logger = structures.Logger.WithFields(logrus.Fields{})
 
 var version = semver.MustParse("0.1.0-dev")
+var gnomon = gnomes.NewGnomes()
 
 // Check grok package version
 func Version() semver.Version {
@@ -151,10 +153,10 @@ func RunGrokker() {
 		logger.Fatalln("[Grokker] No --scid given")
 	}
 
-	menu.InitLogrusLog(logrus.InfoLevel)
+	gnomes.InitLogrusLog(logrus.InfoLevel)
 
-	menu.Gnomes.Fast = fastsync
-	menu.Gnomes.Para = parallel
+	gnomon.SetFastsync(fastsync)
+	gnomon.SetParallel(parallel)
 
 	logger.Println("[Grokker]", version.String(), runtime.GOOS, runtime.GOARCH)
 
@@ -176,9 +178,9 @@ func RunGrokker() {
 	go func() {
 		<-c
 		fmt.Println()
-		menu.Gnomes.Stop("Grokker")
+		gnomon.Stop("Grokker")
 		rpc.Wallet.Connected(false)
-		menu.CloseAppSignal(true)
+		menu.SetClose(true)
 		logger.Println("[Grokker] Closing...")
 	}()
 
@@ -186,28 +188,28 @@ func RunGrokker() {
 	filter := []string{rpc.GetSCCode(GROKSCID)}
 
 	// Set up SCID rating map
-	menu.Control.Contract_rating = make(map[string]uint64)
+	menu.Control.Ratings = make(map[string]uint64)
 
 	// Start Gnomon with search filters
-	go menu.StartGnomon("Grokker", "boltdb", filter, 0, 0, nil)
+	go gnomes.StartGnomon("Grokker", "boltdb", filter, 0, 0, nil)
 
 	// Routine for checking daemon, wallet connection and Gnomon sync
 	go func() {
-		for !menu.ClosingApps() && !menu.Gnomes.IsInitialized() {
+		for !menu.IsClosing() && !gnomon.IsInitialized() {
 			time.Sleep(time.Second)
 		}
 
 		logger.Println("[Grokker] Starting when Gnomon is synced")
-		for !menu.ClosingApps() && menu.Gnomes.IsRunning() && rpc.IsReady() {
+		for !menu.IsClosing() && gnomon.IsRunning() && rpc.IsReady() {
 			rpc.Ping()
 			rpc.EchoWallet("Grokker")
-			menu.Gnomes.IndexContains()
-			if menu.Gnomes.Indexer.LastIndexedHeight >= menu.Gnomes.Indexer.ChainHeight-3 && menu.Gnomes.HasIndex(1) {
-				menu.Gnomes.Synced(true)
+			gnomon.IndexContains()
+			if gnomon.GetLastHeight() >= gnomon.GetChainHeight()-3 && gnomon.HasIndex(1) {
+				gnomon.Synced(true)
 			} else {
-				menu.Gnomes.Synced(false)
-				if !menu.Gnomes.Start && menu.Gnomes.IsInitialized() {
-					diff := menu.Gnomes.Indexer.ChainHeight - menu.Gnomes.Indexer.LastIndexedHeight
+				gnomon.Synced(false)
+				if !gnomon.IsStarting() && gnomon.IsInitialized() {
+					diff := gnomon.GetChainHeight() - gnomon.GetLastHeight()
 					if diff > 3 {
 						logger.Printf("[Grokker] Gnomon has %d blocks to go\n", diff)
 					}
@@ -215,11 +217,11 @@ func RunGrokker() {
 			}
 			time.Sleep(3 * time.Second)
 		}
-		menu.CloseAppSignal(true)
+		menu.SetClose(true)
 	}()
 
 	// Wait for Gnomon to sync
-	for !menu.ClosingApps() && !menu.Gnomes.IsSynced() {
+	for !menu.IsClosing() && !gnomon.IsSynced() {
 		time.Sleep(time.Second)
 	}
 
@@ -228,7 +230,7 @@ func RunGrokker() {
 	grok := uint64(99)
 	clock := uint64(9999673725)
 	var valid, buffer, firstCase, secondCase bool
-	scids := menu.Gnomes.GetAllOwnersAndSCIDs()
+	scids := gnomon.GetAllOwnersAndSCIDs()
 	for sc := range scids {
 		if sc == scid {
 			valid = true
@@ -238,16 +240,16 @@ func RunGrokker() {
 
 	if !valid {
 		logger.Warningf("[Grokker] %s not a valid Grokked SCID", scid)
-		menu.Gnomes.Stop("Grokker")
+		gnomon.Stop("Grokker")
 		rpc.Wallet.Connected(false)
-		menu.CloseAppSignal(true)
+		menu.SetClose(true)
 		logger.Println("[Grokker] Closing...")
 	}
 
 	// Start Grokker
-	for !menu.ClosingApps() {
+	for !menu.IsClosing() {
 		time.Sleep(3 * time.Second)
-		if _, u := menu.Gnomes.GetSCIDValuesByKey(scid, "start"); u != nil {
+		if _, u := gnomon.GetSCIDValuesByKey(scid, "start"); u != nil {
 			switch u[0] {
 			case 0:
 				if !firstCase {
@@ -270,14 +272,14 @@ func RunGrokker() {
 					continue
 				}
 
-				if _, in := menu.Gnomes.GetSCIDValuesByKey(scid, "in"); in != nil {
-					if _, u := menu.Gnomes.GetSCIDValuesByKey(scid, "grok"); u != nil {
+				if _, in := gnomon.GetSCIDValuesByKey(scid, "in"); in != nil {
+					if _, u := gnomon.GetSCIDValuesByKey(scid, "grok"); u != nil {
 						if u[0] != grok {
 							grok = u[0]
 							clock = uint64(9999673725)
 							logger.Printf("[Grokker] %d player(s) in, Grok is %d\n", in[0], grok)
 						}
-						if addr, _ := menu.Gnomes.GetSCIDValuesByKey(scid, u[0]); addr != nil {
+						if addr, _ := gnomon.GetSCIDValuesByKey(scid, u[0]); addr != nil {
 							switch in[0] {
 							case 1:
 								logger.Println("[Grokker] Last player standing, paying out", addr[0])
@@ -289,8 +291,8 @@ func RunGrokker() {
 							default:
 								var tf uint64
 								now := uint64(time.Now().Unix())
-								_, last := menu.Gnomes.GetSCIDValuesByKey(scid, "last")
-								_, dur := menu.Gnomes.GetSCIDValuesByKey(scid, "duration")
+								_, last := gnomon.GetSCIDValuesByKey(scid, "last")
+								_, dur := gnomon.GetSCIDValuesByKey(scid, "duration")
 								if last != nil && dur != nil {
 									tf = last[0] + dur[0]
 									if now > tf+10 {

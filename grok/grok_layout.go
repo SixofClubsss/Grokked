@@ -13,10 +13,9 @@ import (
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/widget"
-	"github.com/civilware/Gnomon/structures"
 	dreams "github.com/dReam-dApps/dReams"
 	"github.com/dReam-dApps/dReams/dwidget"
-	"github.com/dReam-dApps/dReams/menu"
+	"github.com/dReam-dApps/dReams/gnomes"
 	"github.com/dReam-dApps/dReams/rpc"
 )
 
@@ -45,8 +44,7 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 				list, _ = createGrokkedList(false)
 				for _, sc := range list {
 					for i := uint64(0); i < 31; i++ {
-						var v []*structures.SCIDVariable
-						if addr, _, _ := menu.Gnomes.Indexer.GetSCIDValuesByKey(v, sc, i, menu.Gnomes.Indexer.ChainHeight); addr != nil {
+						if addr, _, _ := gnomon.GetLiveSCIDValuesByKey(sc, i); addr != nil {
 							if addr[0] == rpc.Wallet.Address {
 								joined = append(joined, sc)
 							}
@@ -203,7 +201,7 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 	// Join game button
 	join_button := widget.NewButton("Join", nil)
 	join_button.OnTapped = func() {
-		if _, amt := menu.Gnomes.GetSCIDValuesByKey(scid, "amount"); amt != nil {
+		if _, amt := gnomon.GetSCIDValuesByKey(scid, "amount"); amt != nil {
 			dialog.NewConfirm("Join Game", fmt.Sprintf("Entry is %s DERO", rpc.FromAtomic(amt[0], 5)), func(b bool) {
 				if b {
 					go func() {
@@ -230,16 +228,15 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 	grok_owner_button := widget.NewButton("Grok", nil)
 	grok_owner_button.OnTapped = func() {
 		num := uint64(99)
-		if menu.Gnomes.IsReady() {
+		if gnomon.IsReady() {
 			// If waiting for payout use grok for Refund
-			if _, in := menu.Gnomes.GetSCIDValuesByKey(scid, "in"); in != nil && in[0] == 1 {
-				if _, winner := menu.Gnomes.GetSCIDValuesByKey(scid, "grok"); winner != nil {
+			if _, in := gnomon.GetSCIDValuesByKey(scid, "in"); in != nil && in[0] == 1 {
+				if _, winner := gnomon.GetSCIDValuesByKey(scid, "grok"); winner != nil {
 					num = winner[0]
 				}
 			} else {
 				for i := uint64(0); i < 31; i++ {
-					var v []*structures.SCIDVariable
-					if addr, _, _ := menu.Gnomes.Indexer.GetSCIDValuesByKey(v, scid, i, menu.Gnomes.Indexer.ChainHeight); addr != nil {
+					if addr, _, _ := gnomon.GetLiveSCIDValuesByKey(scid, i); addr != nil {
 						if addr[0] == rpc.Wallet.Address {
 							num = i
 							break
@@ -291,10 +288,10 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 	// Payout when last player standing
 	pay_button := widget.NewButton("Pay", nil)
 	pay_button.OnTapped = func() {
-		if menu.Gnomes.IsReady() {
-			if _, in := menu.Gnomes.GetSCIDValuesByKey(scid, "in"); in != nil {
-				if _, u := menu.Gnomes.GetSCIDValuesByKey(scid, "grok"); u != nil {
-					if addr, _ := menu.Gnomes.GetSCIDValuesByKey(scid, u[0]); addr != nil {
+		if gnomon.IsReady() {
+			if _, in := gnomon.GetSCIDValuesByKey(scid, "in"); in != nil {
+				if _, u := gnomon.GetSCIDValuesByKey(scid, "grok"); u != nil {
+					if addr, _ := gnomon.GetSCIDValuesByKey(scid, u[0]); addr != nil {
 						dialog.NewConfirm("Pay winner", fmt.Sprintf("Pay %s", addr[0]), func(b bool) {
 							if b {
 								go func() {
@@ -376,7 +373,7 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 				}
 
 				// Grok initial sync
-				if !synced && menu.GnomonScan(d.IsConfiguring()) {
+				if !synced && gnomes.GnomonScan(d.IsConfiguring()) {
 					logger.Println("[Grokked] Syncing")
 					contract_select.Options, isOwner = createGrokkedList(true)
 					show_opt.SetSelected("Owned")
@@ -392,14 +389,13 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 					continue
 				}
 
-				if menu.Gnomes.IsReady() {
+				if gnomon.IsReady() {
 					var playing bool
 					players = []string{""}
 					players_select.ClearSelected()
 					// Find players in this round
 					for i := uint64(0); i < 31; i++ {
-						var v []*structures.SCIDVariable
-						if addr, _, _ := menu.Gnomes.Indexer.GetSCIDValuesByKey(v, scid, i, menu.Gnomes.Indexer.ChainHeight); addr != nil {
+						if addr, _, _ := gnomon.GetLiveSCIDValuesByKey(scid, i); addr != nil {
 							players = append(players, addr[0])
 							if addr[0] == rpc.Wallet.Address {
 								playing = true
@@ -412,13 +408,13 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 
 					// Find owner of SC
 					var owned bool
-					if owner, _ := menu.Gnomes.GetSCIDValuesByKey(scid, "owner"); owner != nil {
+					if owner, _ := gnomon.GetSCIDValuesByKey(scid, "owner"); owner != nil {
 						if owner[0] == rpc.Wallet.Address {
 							owned = true
 						}
 					}
 
-					if _, u := menu.Gnomes.GetSCIDValuesByKey(scid, "start"); u != nil {
+					if _, u := gnomon.GetSCIDValuesByKey(scid, "start"); u != nil {
 						switch u[0] {
 						case 0:
 							// Waiting for owner to set game
@@ -445,7 +441,7 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 							pay_button.Hide()
 							set_box.Hide()
 							var players uint64
-							_, in := menu.Gnomes.GetSCIDValuesByKey(scid, "in")
+							_, in := gnomon.GetSCIDValuesByKey(scid, "in")
 							if in != nil {
 								players = in[0]
 							}
@@ -478,7 +474,7 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 							}
 
 							// Grok owner and refund if game hasn't started for 48hrs
-							if _, last := menu.Gnomes.GetSCIDValuesByKey(scid, "last"); last != nil {
+							if _, last := gnomon.GetSCIDValuesByKey(scid, "last"); last != nil {
 								now := uint64(time.Now().Unix())
 								if now > last[0]+173400 {
 									if !confirming {
@@ -495,14 +491,14 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 							join_button.Hide()
 							set_box.Hide()
 							start_button.Hide()
-							if _, in := menu.Gnomes.GetSCIDValuesByKey(scid, "in"); in != nil {
-								if _, u := menu.Gnomes.GetSCIDValuesByKey(scid, "grok"); u != nil {
-									if addr, _ := menu.Gnomes.GetSCIDValuesByKey(scid, u[0]); addr != nil {
+							if _, in := gnomon.GetSCIDValuesByKey(scid, "in"); in != nil {
+								if _, u := gnomon.GetSCIDValuesByKey(scid, "grok"); u != nil {
+									if addr, _ := gnomon.GetSCIDValuesByKey(scid, u[0]); addr != nil {
 										// If only one player left, win situation
 										if in[0] == 1 {
 											grok_button.Hide()
 											var amt uint64
-											_, pot := menu.Gnomes.GetSCIDValuesByKey(scid, "pot")
+											_, pot := gnomon.GetSCIDValuesByKey(scid, "pot")
 											if pot != nil {
 												amt = pot[0] / 2
 											}
@@ -518,8 +514,8 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 											}
 
 											// Grok the owner
-											_, last := menu.Gnomes.GetSCIDValuesByKey(scid, "last")
-											_, dur := menu.Gnomes.GetSCIDValuesByKey(scid, "duration")
+											_, last := gnomon.GetSCIDValuesByKey(scid, "last")
+											_, dur := gnomon.GetSCIDValuesByKey(scid, "duration")
 											if last != nil && dur != nil {
 												now := uint64(time.Now().Unix())
 												if now > last[0]+dur[0]+600 {
@@ -551,8 +547,8 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 											var overdue bool
 											left := "?"
 											now := uint64(time.Now().Unix())
-											_, last := menu.Gnomes.GetSCIDValuesByKey(scid, "last")
-											_, dur := menu.Gnomes.GetSCIDValuesByKey(scid, "duration")
+											_, last := gnomon.GetSCIDValuesByKey(scid, "last")
+											_, dur := gnomon.GetSCIDValuesByKey(scid, "duration")
 											if last != nil && dur != nil {
 												tf = last[0] + dur[0]
 												if now < tf {
@@ -671,22 +667,22 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 
 // Create list of Grokked SCIDs from index
 func createGrokkedList(owned bool) (options []string, owner bool) {
-	if menu.Gnomes.IsReady() {
-		scids := menu.Gnomes.GetAllOwnersAndSCIDs()
-		_, check := menu.Gnomes.GetSCIDValuesByKey(GROKSCID, "v")
+	if gnomon.IsReady() {
+		scids := gnomon.GetAllOwnersAndSCIDs()
+		_, check := gnomon.GetSCIDValuesByKey(GROKSCID, "v")
 		if check == nil {
 			return
 		}
 
 		for scid := range scids {
-			if !menu.Gnomes.IsReady() {
+			if !gnomon.IsReady() {
 				break
 			}
 
-			if _, start := menu.Gnomes.GetSCIDValuesByKey(scid, "start"); start != nil {
-				if _, version := menu.Gnomes.GetSCIDValuesByKey(scid, "v"); version != nil {
+			if _, start := gnomon.GetSCIDValuesByKey(scid, "start"); start != nil {
+				if _, version := gnomon.GetSCIDValuesByKey(scid, "v"); version != nil {
 					if owned {
-						if o, _ := menu.Gnomes.GetSCIDValuesByKey(scid, "owner"); o != nil {
+						if o, _ := gnomon.GetSCIDValuesByKey(scid, "owner"); o != nil {
 							if o[0] == rpc.Wallet.Address {
 								owner = true
 								options = append(options, scid)
@@ -694,8 +690,8 @@ func createGrokkedList(owned bool) (options []string, owner bool) {
 							}
 						}
 					} else {
-						if _, join := menu.Gnomes.GetSCIDValuesByKey(scid, "joined"); join != nil {
-							if _, last := menu.Gnomes.GetSCIDValuesByKey(scid, "last"); last != nil {
+						if _, join := gnomon.GetSCIDValuesByKey(scid, "joined"); join != nil {
+							if _, last := gnomon.GetSCIDValuesByKey(scid, "last"); last != nil {
 								if version[0] == check[0] {
 									options = append(options, scid)
 									continue
