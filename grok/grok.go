@@ -187,9 +187,6 @@ func RunGrokker() {
 	// Set up Gnomon search filters for Grokked SCIDs
 	filter := []string{rpc.GetSCCode(GROKSCID)}
 
-	// Set up SCID rating map
-	menu.Control.Ratings = make(map[string]uint64)
-
 	// Start Gnomon with search filters
 	go gnomes.StartGnomon("Grokker", "boltdb", filter, 0, 0, nil)
 
