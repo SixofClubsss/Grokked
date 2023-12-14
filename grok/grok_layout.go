@@ -14,6 +14,7 @@ import (
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/widget"
 	dreams "github.com/dReam-dApps/dReams"
+	"github.com/dReam-dApps/dReams/bundle"
 	"github.com/dReam-dApps/dReams/dwidget"
 	"github.com/dReam-dApps/dReams/gnomes"
 	"github.com/dReam-dApps/dReams/rpc"
@@ -21,41 +22,39 @@ import (
 
 func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 	var scid string
+	var sc_list *widget.List
+	var contracts []gnomes.SC
 	var disableFunc func()
 	var synced, isOwner bool
 
-	// SCID select and filter options
-	contract_select := widget.NewSelect([]string{GROKSCID}, func(s string) {
-		scid = s
-	})
-	contract_select.PlaceHolder = "Grokked SCIDs:"
-
-	show_opt := widget.NewRadioGroup([]string{"All", "Joined", "Owned"}, nil)
-	show_opt.Horizontal = true
-	show_opt.Required = true
-	show_opt.OnChanged = func(s string) {
+	sc_opt := widget.NewRadioGroup([]string{"All", "Joined", "Owned"}, nil)
+	sc_opt.Horizontal = true
+	sc_opt.Required = true
+	sc_opt.OnChanged = func(s string) {
 		go func() {
-			contract_select.Options = []string{}
+			sc_list.UnselectAll()
+			contracts = []gnomes.SC{}
 			switch s {
 			case "Owned":
-				contract_select.Options, _ = createGrokkedList(true)
+				contracts, _ = createGrokkedList(true)
 			case "Joined":
-				var joined, list []string
-				list, _ = createGrokkedList(false)
-				for _, sc := range list {
+				var joined, all []gnomes.SC
+				all, _ = createGrokkedList(false)
+				for _, sc := range all {
 					for i := uint64(0); i < 31; i++ {
-						if addr, _, _ := gnomon.GetLiveSCIDValuesByKey(sc, i); addr != nil {
+						if addr, _, _ := gnomon.GetLiveSCIDValuesByKey(sc.ID, i); addr != nil {
 							if addr[0] == rpc.Wallet.Address {
 								joined = append(joined, sc)
 							}
 						}
 					}
 				}
-				contract_select.Options = joined
+				contracts = joined
 
 			default:
-				contract_select.Options, _ = createGrokkedList(false)
+				contracts, _ = createGrokkedList(false)
 			}
+			sc_list.Refresh()
 		}()
 	}
 
@@ -79,12 +78,14 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 	var confirming bool
 	confirmed := make(chan bool)
 	set_button := widget.NewButton("Set", nil)
+	set_button.Importance = widget.HighImportance
 
 	set_box := container.NewBorder(nil, set_spacer, nil, set_button, container.NewAdaptiveGrid(2, set_amt, set_dur))
 	set_box.Hide()
 
 	// Install SC buttons
 	unlock_button := widget.NewButton("Unlock SC", nil)
+	unlock_button.Importance = widget.HighImportance
 	unlock_button.OnTapped = func() {
 		dialog.NewConfirm("Unlock SC", "Unlock Grokked SC\n\nTo help support the project a 1.00000 DERO donation is attached to this action", func(b bool) {
 			if b {
@@ -104,6 +105,7 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 	unlock_button.Hide()
 
 	new_button := widget.NewButton("New SC", nil)
+	new_button.Importance = widget.HighImportance
 	new_button.OnTapped = func() {
 		dialog.NewConfirm("New SC", "Install a new Grokked SC", func(b bool) {
 			if b {
@@ -155,6 +157,7 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 
 	// Start game button
 	start_button := widget.NewButton("Start", nil)
+	start_button.Importance = widget.HighImportance
 	start_button.Hide()
 	start_button.OnTapped = func() {
 		dialog.NewConfirm("Start", "Start this game?", func(b bool) {
@@ -180,6 +183,7 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 
 	// Pass Grok button
 	pass_button := widget.NewButton("Pass", nil)
+	pass_button.Importance = widget.HighImportance
 	pass_button.OnTapped = func() {
 		dialog.NewConfirm("Pass", "Pass Grok to new player", func(b bool) {
 			if b {
@@ -200,6 +204,7 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 
 	// Join game button
 	join_button := widget.NewButton("Join", nil)
+	join_button.Importance = widget.HighImportance
 	join_button.OnTapped = func() {
 		if _, amt := gnomon.GetSCIDValuesByKey(scid, "amount"); amt != nil {
 			dialog.NewConfirm("Join Game", fmt.Sprintf("Entry is %s DERO", rpc.FromAtomic(amt[0], 5)), func(b bool) {
@@ -226,6 +231,7 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 
 	// Grok owner button, payout all players still in game
 	grok_owner_button := widget.NewButton("Grok", nil)
+	grok_owner_button.Importance = widget.HighImportance
 	grok_owner_button.OnTapped = func() {
 		num := uint64(99)
 		if gnomon.IsReady() {
@@ -267,6 +273,7 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 
 	// Owner button to Grok player
 	grok_button := widget.NewButton("Grok", nil)
+	grok_button.Importance = widget.HighImportance
 	grok_button.OnTapped = func() {
 		dialog.NewConfirm("Grokked", "Grok Player?", func(b bool) {
 			if b {
@@ -287,6 +294,7 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 
 	// Payout when last player standing
 	pay_button := widget.NewButton("Pay", nil)
+	pay_button.Importance = widget.HighImportance
 	pay_button.OnTapped = func() {
 		if gnomon.IsReady() {
 			if _, in := gnomon.GetSCIDValuesByKey(scid, "in"); in != nil {
@@ -339,10 +347,11 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 			case <-d.Receive():
 				if !rpc.Wallet.IsConnected() || !rpc.Daemon.IsConnected() {
 					disableFunc()
+					scid = ""
 					synced = false
 					isOwner = false
-					contract_select.ClearSelected()
-					contract_select.Options = []string{}
+					sc_list.UnselectAll()
+					contracts = []gnomes.SC{}
 					ind.Resource = resourceGrokJpg
 					ind.Refresh()
 					label.SetText("Connect your wallet and daemon...")
@@ -375,8 +384,8 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 				// Grok initial sync
 				if !synced && gnomes.GnomonScan(d.IsConfiguring()) {
 					logger.Println("[Grokked] Syncing")
-					contract_select.Options, isOwner = createGrokkedList(true)
-					show_opt.SetSelected("Owned")
+					contracts, isOwner = createGrokkedList(true)
+					sc_opt.SetSelected("Owned")
 					synced = true
 
 				}
@@ -396,7 +405,7 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 					// Find players in this round
 					for i := uint64(0); i < 31; i++ {
 						if addr, _, _ := gnomon.GetLiveSCIDValuesByKey(scid, i); addr != nil {
-							players = append(players, addr[0])
+							players = append(players, fmt.Sprintf("(%d) %s", i, addr[0]))
 							if addr[0] == rpc.Wallet.Address {
 								playing = true
 							}
@@ -459,7 +468,9 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 								if players < 3 {
 									label.SetText(fmt.Sprintf("Waiting for %d more player(s)...", 3-players))
 								} else {
-									label.SetText(fmt.Sprintf("%d players in, waiting for owner to start the game...", players))
+									if !confirming {
+										label.SetText(fmt.Sprintf("%d players in, waiting for owner to start the game...", players))
+									}
 								}
 							}
 
@@ -640,12 +651,23 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 		}
 	}()
 
-	return container.NewBorder(
-		container.NewBorder(container.NewCenter(container.NewVBox(show_opt, contract_select)), container.NewCenter(label), nil, nil, container.NewCenter(ind)),
-		container.NewVBox(
-			container.NewCenter(unlock_button),
-			layout.NewSpacer(),
-			container.NewCenter(new_button)),
+	sc_button := widget.NewButton("Select SCID", nil)
+
+	sc_entry := widget.NewEntry()
+	sc_entry.Disable()
+
+	sc_spacer := canvas.NewRectangle(color.Transparent)
+	sc_spacer.SetMinSize(fyne.NewSize(400, 0))
+
+	grok_cont := container.NewBorder(
+		container.NewBorder(
+			container.NewCenter(container.NewVBox(canvas.NewLine(bundle.TextColor), dwidget.NewCanvasText("Grokked", 18, fyne.TextAlignCenter), canvas.NewLine(bundle.TextColor))),
+			container.NewCenter(container.NewVBox(sc_spacer, sc_entry, container.NewCenter(label))),
+			nil,
+			nil,
+			container.NewCenter(ind)),
+
+		container.NewCenter(sc_button),
 		nil,
 		nil,
 		container.NewVBox(
@@ -654,8 +676,10 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 			container.NewVBox(
 				container.NewCenter(set_box),
 				container.NewCenter(start_button),
-				container.NewCenter(grok_button),
-				container.NewCenter(grok_owner_button),
+				container.NewCenter(
+					container.NewHBox(
+						container.NewCenter(grok_button),
+						container.NewCenter(grok_owner_button))),
 				container.NewCenter(join_button),
 				container.NewCenter(pass_button),
 				container.NewCenter(pay_button),
@@ -663,10 +687,71 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 			),
 			layout.NewSpacer(),
 			layout.NewSpacer()))
+
+	max := container.NewStack(grok_cont)
+
+	sc_list = widget.NewList(
+		func() int {
+			return len(contracts)
+		},
+		func() fyne.CanvasObject {
+			return container.NewVBox(widget.NewLabel(""), widget.NewLabel(""))
+		},
+		func(id widget.ListItemID, c fyne.CanvasObject) {
+			if len(contracts) < 1 {
+				return
+			}
+
+			sc := contracts[id]
+			c.(*fyne.Container).Objects[0].(*widget.Label).SetText(fmt.Sprintf("%s   %s", sc.Header.Name, sc.Header.Description))
+			c.(*fyne.Container).Objects[1].(*widget.Label).SetText(sc.ID)
+			c.Refresh()
+		})
+
+	sc_list.OnSelected = func(id int) {
+		scid = contracts[id].ID
+		sc_entry.SetText(scid)
+	}
+
+	back_button := widget.NewButton("Back", func() {
+		sc_entry.SetText(scid)
+		max.Objects[0] = grok_cont
+	})
+
+	sc_button.OnTapped = func() {
+		sc_entry.SetText(scid)
+		sc_list.UnselectAll()
+
+		spacer := canvas.NewRectangle(color.Transparent)
+		spacer.SetMinSize(fyne.NewSize(200, 200))
+
+		max.Objects[0] = container.NewBorder(
+			container.NewVBox(
+				container.NewCenter(container.NewVBox(canvas.NewLine(bundle.TextColor), dwidget.NewCanvasText("Grokked SCs", 18, fyne.TextAlignCenter), canvas.NewLine(bundle.TextColor))),
+				container.NewCenter(sc_opt)),
+			container.NewCenter(back_button),
+			nil,
+			nil,
+			container.NewAdaptiveGrid(3,
+				layout.NewSpacer(),
+				container.NewBorder(
+					nil,
+					container.NewCenter(
+						spacer,
+						container.NewHBox(
+							container.NewCenter(unlock_button),
+							container.NewCenter(new_button))),
+					nil,
+					nil,
+					sc_list),
+				layout.NewSpacer()))
+	}
+
+	return max
 }
 
 // Create list of Grokked SCIDs from index
-func createGrokkedList(owned bool) (options []string, owner bool) {
+func createGrokkedList(owned bool) (options []gnomes.SC, owner bool) {
 	if gnomon.IsReady() {
 		scids := gnomon.GetAllOwnersAndSCIDs()
 		_, check := gnomon.GetSCIDValuesByKey(GROKSCID, "v")
@@ -681,11 +766,16 @@ func createGrokkedList(owned bool) (options []string, owner bool) {
 
 			if _, start := gnomon.GetSCIDValuesByKey(scid, "start"); start != nil {
 				if _, version := gnomon.GetSCIDValuesByKey(scid, "v"); version != nil {
+					var new gnomes.SC
+					headers := gnomes.GetSCHeaders(scid)
+					new.ID = scid
+					new.Header.Name = headers.Name
+					new.Header.Description = headers.Description
 					if owned {
 						if o, _ := gnomon.GetSCIDValuesByKey(scid, "owner"); o != nil {
 							if o[0] == rpc.Wallet.Address {
 								owner = true
-								options = append(options, scid)
+								options = append(options, new)
 								continue
 							}
 						}
@@ -693,7 +783,7 @@ func createGrokkedList(owned bool) (options []string, owner bool) {
 						if _, join := gnomon.GetSCIDValuesByKey(scid, "joined"); join != nil {
 							if _, last := gnomon.GetSCIDValuesByKey(scid, "last"); last != nil {
 								if version[0] == check[0] {
-									options = append(options, scid)
+									options = append(options, new)
 									continue
 								}
 							}
@@ -701,7 +791,9 @@ func createGrokkedList(owned bool) (options []string, owner bool) {
 					}
 				}
 			}
-			sort.Strings(options)
+			sort.Slice(options, func(i, j int) bool {
+				return options[i].Header.Name > options[j].Header.Name
+			})
 		}
 	}
 

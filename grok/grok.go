@@ -87,9 +87,9 @@ Options:
 func RunGrokker() {
 	n := runtime.NumCPU()
 	runtime.GOMAXPROCS(n)
+	gnomes.InitLogrusLog(logrus.InfoLevel)
 
 	arguments, err := docopt.ParseArgs(command_line, nil, version.String())
-
 	if err != nil {
 		logger.Fatalf("Error while parsing arguments: %s\n", err)
 	}
@@ -152,8 +152,6 @@ func RunGrokker() {
 	if scid == "" {
 		logger.Fatalln("[Grokker] No --scid given")
 	}
-
-	gnomes.InitLogrusLog(logrus.InfoLevel)
 
 	gnomon.SetFastsync(fastsync)
 	gnomon.SetParallel(parallel)
