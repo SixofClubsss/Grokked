@@ -382,7 +382,7 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 				}
 
 				// Grok initial sync
-				if !synced && gnomes.GnomonScan(d.IsConfiguring()) {
+				if !synced && gnomes.Scan(d.IsConfiguring()) {
 					logger.Println("[Grokked] Syncing")
 					contracts, isOwner = createGrokkedList(true)
 					sc_opt.SetSelected("Owned")

@@ -44,8 +44,9 @@ func DreamsMenuIntro() (entries map[string][]string) {
 
 		"How to play": {
 			"Connect to your Dero wallet and daemon",
-			"Select the All button to view all public SCID options",
-			"Select one from the drop down",
+			"Click Select SCID view your SCID options",
+			"Select public to view the public SCIDs",
+			"Click on one to connect to the contract",
 			"If the owner is not a Grok and is ready to play you can click Join",
 			"Once enough players have joined the owner can start the game",
 			"A player will be randomly selected as the Grok",
@@ -55,11 +56,12 @@ func DreamsMenuIntro() (entries map[string][]string) {
 			"The owner is in charge of Grokking, if they aren't paying attention players can Grok the owner and give all remaining players a win a share of the pot"},
 
 		"How to install and run a game": {
+			"Click Select SCID view your SCID options",
 			"Click on Unlock SC to your first contract",
 			"There is a 1.00000 DERO donation to perform this action, becoming a Grokked owner give you unlimited access to Grokked installs and future updates",
 			"Select the Owned button to view your owned contracts",
-			"Select one from the drop down",
-			"Set the entry amount in DERO and time frame to pass",
+			"Click on one to connect to the contract",
+			"Go back to main screen and set the entry amount in DERO and time frame to pass",
 			"Once 3 or more players have joined you can start the game",
 			"You can Grok players from the UI, or use the Grokker CLI app to run a more lightweight process for owner controls"},
 	}
@@ -153,7 +155,7 @@ func RunGrokker() {
 		logger.Fatalln("[Grokker] No --scid given")
 	}
 
-	gnomon.SetFastsync(fastsync)
+	gnomon.SetFastsync(fastsync, true, 10000)
 	gnomon.SetParallel(parallel)
 
 	logger.Println("[Grokker]", version.String(), runtime.GOOS, runtime.GOARCH)
