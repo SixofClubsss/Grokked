@@ -225,7 +225,7 @@ func Refund(scid string, p uint64) (tx string) {
 
 // Upload a new Grokked SC
 func UploadContract(owner bool) (tx string) {
-	rpcClientW, ctx, cancel := rpc.SetWalletClient(rpc.Wallet.Address, rpc.Wallet.UserPass)
+	rpcClientW, ctx, cancel := rpc.SetWalletClient(rpc.Wallet.Rpc, rpc.Wallet.UserPass)
 	defer cancel()
 
 	code := rpc.GetSCCode(GROKSCID)
