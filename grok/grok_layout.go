@@ -110,18 +110,16 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 		dialog.NewConfirm("Unlock SC", "Unlock Grokked SC\n\nTo help support the project a 1.00000 DERO donation is attached to this action", func(b bool) {
 			if b {
 				go func() {
-					if tx := UploadContract(isOwner); tx != "" {
-						label.SetText("Confirming Install TX...")
-						confirming = true
-						disableFunc()
-						go menu.ShowTxDialog("Upload SC", fmt.Sprintf("TX: %s", tx), tx, 3*time.Second, d.Window)
-						if rpc.ConfirmTx(tx, "Grokked", 90) {
-							isOwner = true
-						}
-						time.Sleep(time.Second)
-					} else {
-						go menu.ShowTxDialog("Upload SC", "TX error, check logs", tx, 3*time.Second, d.Window)
+					tx := UploadContract(isOwner)
+					label.SetText("Confirming Install TX...")
+					confirming = true
+					disableFunc()
+					go menu.ShowTxDialog("Upload SC", "", tx, 3*time.Second, d.Window)
+					if rpc.ConfirmTx(tx, "Grokked", 60) {
+						isOwner = true
 					}
+					time.Sleep(time.Second)
+
 					confirmed <- true
 				}()
 			}
@@ -135,16 +133,14 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 		dialog.NewConfirm("New SC", "Install a new Grokked SC, gas fee is 0.07000 DERO", func(b bool) {
 			if b {
 				go func() {
-					if tx := UploadContract(isOwner); tx != "" {
-						label.SetText("Confirming Install TX...")
-						confirming = true
-						disableFunc()
-						go menu.ShowTxDialog("New SC", fmt.Sprintf("TX: %s", tx), tx, 3*time.Second, d.Window)
-						rpc.ConfirmTx(tx, "Grokked", 90)
-						time.Sleep(time.Second)
-					} else {
-						go menu.ShowTxDialog("New SC", "TX error, check logs", tx, 3*time.Second, d.Window)
-					}
+					tx := UploadContract(isOwner)
+					label.SetText("Confirming Install TX...")
+					confirming = true
+					disableFunc()
+					go menu.ShowTxDialog("New SC", "", tx, 3*time.Second, d.Window)
+					rpc.ConfirmTx(tx, "Grokked", 50)
+					time.Sleep(time.Second)
+
 					confirmed <- true
 				}()
 			}
@@ -170,16 +166,14 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 			if b {
 				go func() {
 					seconds := rpc.Uint64Type(set_dur.Text) * 60
-					if tx := Set(scid, rpc.ToAtomic(set_amt.Text, 5), seconds); tx != "" {
-						label.SetText("Confirming Set TX...")
-						confirming = true
-						disableFunc()
-						go menu.ShowTxDialog("Set", fmt.Sprintf("TX: %s", tx), tx, 3*time.Second, d.Window)
-						rpc.ConfirmTx(tx, "Grokked", 90)
-						time.Sleep(time.Second)
-					} else {
-						go menu.ShowTxDialog("Set", "TX error, check logs", tx, 3*time.Second, d.Window)
-					}
+					tx := Set(scid, rpc.ToAtomic(set_amt.Text, 5), seconds)
+					label.SetText("Confirming Set TX...")
+					confirming = true
+					disableFunc()
+					go menu.ShowTxDialog("Set", "", tx, 3*time.Second, d.Window)
+					rpc.ConfirmTx(tx, "Grokked", 50)
+					time.Sleep(time.Second)
+
 					confirmed <- true
 				}()
 			}
@@ -194,16 +188,14 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 		dialog.NewConfirm("Start", "Start this game?", func(b bool) {
 			if b {
 				go func() {
-					if tx := Start(scid); tx != "" {
-						label.SetText("Confirming Start TX...")
-						confirming = true
-						disableFunc()
-						go menu.ShowTxDialog("Start", fmt.Sprintf("TX: %s", tx), tx, 3*time.Second, d.Window)
-						rpc.ConfirmTx(tx, "Grokked", 90)
-						time.Sleep(time.Second)
-					} else {
-						go menu.ShowTxDialog("Start", "TX error, check logs", tx, 3*time.Second, d.Window)
-					}
+					tx := Start(scid)
+					label.SetText("Confirming Start TX...")
+					confirming = true
+					disableFunc()
+					go menu.ShowTxDialog("Start", "", tx, 3*time.Second, d.Window)
+					rpc.ConfirmTx(tx, "Grokked", 50)
+					time.Sleep(time.Second)
+
 					confirmed <- true
 				}()
 			}
@@ -222,16 +214,14 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 		dialog.NewConfirm("Pass", "Pass Grok to new player", func(b bool) {
 			if b {
 				go func() {
-					if tx := Pass(scid); tx != "" {
-						label.SetText("Confirming Pass TX...")
-						confirming = true
-						disableFunc()
-						go menu.ShowTxDialog("Pass", fmt.Sprintf("TX: %s", tx), tx, 3*time.Second, d.Window)
-						rpc.ConfirmTx(tx, "Grokked", 90)
-						time.Sleep(time.Second)
-					} else {
-						go menu.ShowTxDialog("Pass", "TX error, check logs", tx, 3*time.Second, d.Window)
-					}
+					tx := Pass(scid)
+					label.SetText("Confirming Pass TX...")
+					confirming = true
+					disableFunc()
+					go menu.ShowTxDialog("Pass", "", tx, 3*time.Second, d.Window)
+					rpc.ConfirmTx(tx, "Grokked", 50)
+					time.Sleep(time.Second)
+
 					confirmed <- true
 				}()
 			}
@@ -247,16 +237,14 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 			dialog.NewConfirm("Join Game", fmt.Sprintf("Entry is %s DERO", rpc.FromAtomic(amt[0], 5)), func(b bool) {
 				if b {
 					go func() {
-						if tx := Join(scid, amt[0]); tx != "" {
-							confirming = true
-							label.SetText("Confirming Join TX...")
-							disableFunc()
-							go menu.ShowTxDialog("Join", fmt.Sprintf("TX: %s", tx), tx, 3*time.Second, d.Window)
-							rpc.ConfirmTx(tx, "Grokked", 90)
-							time.Sleep(time.Second)
-						} else {
-							go menu.ShowTxDialog("Join", "TX error, check logs", tx, 3*time.Second, d.Window)
-						}
+						tx := Join(scid, amt[0])
+						confirming = true
+						label.SetText("Confirming Join TX...")
+						disableFunc()
+						go menu.ShowTxDialog("Join", "", tx, 3*time.Second, d.Window)
+						rpc.ConfirmTx(tx, "Grokked", 50)
+						time.Sleep(time.Second)
+
 						confirmed <- true
 					}()
 				}
@@ -296,20 +284,20 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 			dialog.NewConfirm("Grokked", "Grok owner?", func(b bool) {
 				if b {
 					go func() {
-						if tx := Refund(scid, num); tx != "" {
-							label.SetText("Confirming Grokked TX...")
-							confirming = true
-							disableFunc()
-							go menu.ShowTxDialog("Grokked", fmt.Sprintf("TX: %s", tx), tx, 3*time.Second, d.Window)
-							rpc.ConfirmTx(tx, "Grokked", 90)
-							time.Sleep(time.Second)
-						} else {
-							go menu.ShowTxDialog("Grokked", "TX error, check logs", tx, 3*time.Second, d.Window)
-						}
+						tx := Refund(scid, num)
+						label.SetText("Confirming Grokked TX...")
+						confirming = true
+						disableFunc()
+						go menu.ShowTxDialog("Grokked", "", tx, 3*time.Second, d.Window)
+						rpc.ConfirmTx(tx, "Grokked", 50)
+						time.Sleep(time.Second)
+
 						confirmed <- true
 					}()
 				}
 			}, d.Window).Show()
+		} else {
+			dialog.NewInformation("Can't Grok", "You are not in this game", d.Window).Show()
 		}
 	}
 	grok_owner_button.Hide()
@@ -321,16 +309,14 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 		dialog.NewConfirm("Grokked", "Grok Player?", func(b bool) {
 			if b {
 				go func() {
-					if tx := Grokked(scid); tx != "" {
-						label.SetText("Confirming Grokked TX...")
-						confirming = true
-						disableFunc()
-						go menu.ShowTxDialog("Grokked", fmt.Sprintf("TX: %s", tx), tx, 3*time.Second, d.Window)
-						rpc.ConfirmTx(tx, "Grokked", 90)
-						time.Sleep(time.Second)
-					} else {
-						go menu.ShowTxDialog("Grokked", "TX error, check logs", tx, 3*time.Second, d.Window)
-					}
+					tx := Grokked(scid)
+					label.SetText("Confirming Grokked TX...")
+					confirming = true
+					disableFunc()
+					go menu.ShowTxDialog("Grokked", "", tx, 3*time.Second, d.Window)
+					rpc.ConfirmTx(tx, "Grokked", 50)
+					time.Sleep(time.Second)
+
 					confirmed <- true
 				}()
 			}
@@ -351,16 +337,13 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 								go func() {
 									switch in[0] {
 									case 1:
-										if tx := Win(scid, u[0]); tx != "" {
-											label.SetText("Confirming Payout TX...")
-											confirming = true
-											disableFunc()
-											go menu.ShowTxDialog("Pay", fmt.Sprintf("TX: %s", tx), tx, 3*time.Second, d.Window)
-											rpc.ConfirmTx(tx, "Grokked", 90)
-											time.Sleep(time.Second)
-										} else {
-											go menu.ShowTxDialog("Pay", "TX error, check logs", tx, 3*time.Second, d.Window)
-										}
+										tx := Win(scid, u[0])
+										label.SetText("Confirming Payout TX...")
+										confirming = true
+										disableFunc()
+										go menu.ShowTxDialog("Pay", "", tx, 3*time.Second, d.Window)
+										rpc.ConfirmTx(tx, "Grokked", 50)
+										time.Sleep(time.Second)
 									default:
 										dialog.NewInformation("To Many Players", "There are still more players to be Grokked", d.Window).Show()
 									}
