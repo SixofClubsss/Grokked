@@ -162,13 +162,13 @@ func RunGrokker() {
 
 	// Check for daemon connection
 	rpc.Ping()
-	if !rpc.Daemon.Connect {
+	if !rpc.Daemon.IsConnected() {
 		logger.Fatalf("[Grokker] Daemon %s not connected\n", rpc.Daemon.Rpc)
 	}
 
 	// Check for wallet connection
 	rpc.GetAddress("Grokker")
-	if !rpc.Wallet.Connect {
+	if !rpc.Wallet.IsConnected() {
 		logger.Fatalf("[Grokker] Wallet %s not connected\n", rpc.Wallet.Rpc)
 	}
 
@@ -218,7 +218,7 @@ func RunGrokker() {
 	}()
 
 	// Wait for Gnomon to sync
-	for !menu.IsClosing() && !gnomon.IsSynced() {
+	for !menu.IsClosing() && (!gnomon.IsSynced() || gnomon.IsStatus("fastsyncing")) {
 		time.Sleep(time.Second)
 	}
 
