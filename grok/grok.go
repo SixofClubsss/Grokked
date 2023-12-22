@@ -158,7 +158,7 @@ func RunGrokker() {
 	gnomon.SetFastsync(fastsync, true, 10000)
 	gnomon.SetParallel(parallel)
 
-	logger.Println("[Grokker]", version.String(), runtime.GOOS, runtime.GOARCH)
+	logger.Printf("[Grokker] %s  OS: %s  ARCH: %s  DREAMS: %s  GNOMON: %s\n", version.String(), runtime.GOOS, runtime.GOARCH, rpc.Version(), structures.Version.String())
 
 	// Check for daemon connection
 	rpc.Ping()
