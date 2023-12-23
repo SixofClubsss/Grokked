@@ -2,7 +2,7 @@
 
 This file lists the changes to Grokked repo with each version.
 
-## 0.1.0 - In Progress
+## 0.1.0 - December 23 2023
 
 Grokked v0.1.0 is a proof of attention game built on DERO
 
