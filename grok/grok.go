@@ -172,6 +172,8 @@ func RunGrokker() {
 		logger.Fatalf("[Grokker] Wallet %s not connected\n", rpc.Wallet.Rpc)
 	}
 
+	done := make(chan struct{})
+
 	// Handle ctrl-c close
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
@@ -197,24 +199,29 @@ func RunGrokker() {
 		}
 
 		logger.Println("[Grokker] Starting when Gnomon is synced")
-		for !menu.IsClosing() && gnomon.IsRunning() && rpc.IsReady() {
-			rpc.Ping()
-			rpc.EchoWallet("Grokker")
-			gnomon.IndexContains()
-			if gnomon.GetLastHeight() >= gnomon.GetChainHeight()-3 && gnomon.HasIndex(1) {
-				gnomon.Synced(true)
-			} else {
-				gnomon.Synced(false)
-				if !gnomon.IsStarting() && gnomon.IsInitialized() {
-					diff := gnomon.GetChainHeight() - gnomon.GetLastHeight()
-					if diff > 3 {
-						logger.Printf("[Grokker] Gnomon has %d blocks to go\n", diff)
+
+		for {
+			select {
+			case <-done:
+				return
+			default:
+				rpc.Ping()
+				rpc.EchoWallet("Grokker")
+				gnomon.IndexContains()
+				if gnomon.GetLastHeight() >= gnomon.GetChainHeight()-3 && gnomon.HasIndex(1) {
+					gnomon.Synced(true)
+				} else {
+					gnomon.Synced(false)
+					if !gnomon.IsStarting() && gnomon.IsInitialized() {
+						diff := gnomon.GetChainHeight() - gnomon.GetLastHeight()
+						if diff > 3 {
+							logger.Printf("[Grokker] Gnomon has %d blocks to go\n", diff)
+						}
 					}
 				}
+				time.Sleep(2 * time.Second)
 			}
-			time.Sleep(3 * time.Second)
 		}
-		menu.SetClose(true)
 	}()
 
 	// Wait for Gnomon to sync
@@ -236,7 +243,7 @@ func RunGrokker() {
 	}
 
 	if !valid {
-		logger.Warningf("[Grokker] %s not a valid Grokked SCID", scid)
+		logger.Warnf("[Grokker] %s not a valid Grokked SCID", scid)
 		gnomon.Stop("Grokker")
 		rpc.Wallet.Connected(false)
 		menu.SetClose(true)
@@ -279,6 +286,11 @@ func RunGrokker() {
 						if addr, _ := gnomon.GetSCIDValuesByKey(scid, u[0]); addr != nil {
 							switch in[0] {
 							case 1:
+								if !rpc.Wallet.IsConnected() {
+									logger.Errorln("[Grokker] Wallet not connected")
+									continue
+								}
+
 								logger.Println("[Grokker] Last player standing, paying out", addr[0])
 								if tx := Win(scid, u[0]); tx != "" {
 									rpc.ConfirmTx(tx, "Grokker", 90)
@@ -286,6 +298,11 @@ func RunGrokker() {
 									buffer = true
 								}
 							default:
+								if !rpc.Wallet.IsConnected() {
+									logger.Errorln("[Grokker] Wallet not connected")
+									continue
+								}
+
 								var tf uint64
 								now := uint64(time.Now().Unix())
 								_, last := gnomon.GetSCIDValuesByKey(scid, "last")
@@ -320,5 +337,7 @@ func RunGrokker() {
 		}
 	}
 
+	close(done)
+	time.Sleep(2 * time.Second)
 	logger.Println("[Grokker] Closed")
 }
