@@ -22,7 +22,7 @@ const GROKSCID = "a3e6a008d760c7b98471f27402f5539cafdfffdde2311174604023a7903a08
 
 var logger = structures.Logger.WithFields(logrus.Fields{})
 
-var version = semver.MustParse("0.1.0-dev.1")
+var version = semver.MustParse("0.1.0-dev.2")
 var gnomon = gnomes.NewGnomes()
 
 // Check grok package version
