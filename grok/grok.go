@@ -22,7 +22,7 @@ const GROKSCID = "c140bf05a20fc91e0f511528e534a1cd8d7e457197e0391ec723783df0c8bd
 
 var logger = structures.Logger.WithFields(logrus.Fields{})
 
-var version = semver.MustParse("0.1.0-dev.5")
+var version = semver.MustParse("0.1.0-dev.6")
 var gnomon = gnomes.NewGnomes()
 var scVersion uint64
 
