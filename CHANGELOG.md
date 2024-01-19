@@ -2,6 +2,19 @@
 
 This file lists the changes to Grokked repo with each version.
 
+## 0.1.1 - In Progress
+
+### Added
+* Version 2 SC
+* SC update func
+
+### Changed
+* Go 1.21.5
+* Fyne 2.4.3
+* dReams 0.11.1
+* Grokker loop to for select
+
+
 ## 0.1.0 - December 23 2023
 
 Grokked v0.1.0 is a proof of attention game built on DERO
