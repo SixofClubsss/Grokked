@@ -83,11 +83,16 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 
 	// Set game objects
 	set_amt := dwidget.NewDeroEntry("", 0.1, 5)
-	set_amt.SetPlaceHolder("Dero:")
+	set_amt.SetPlaceHolder("DERO:")
 	set_amt.AllowFloat = true
+
 	set_dur := dwidget.NewDeroEntry("", 1, 0)
-	set_dur.SetPlaceHolder("Minutes")
+	set_dur.SetPlaceHolder("Minutes:")
 	set_dur.AllowFloat = false
+
+	set_dep := dwidget.NewDeroEntry("", 0.1, 5)
+	set_dep.SetPlaceHolder("DERO:")
+	set_dep.AllowFloat = true
 
 	set_spacer := canvas.NewRectangle(color.Transparent)
 	set_spacer.SetMinSize(fyne.NewSize(200, 0))
@@ -100,7 +105,10 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 	set_button := widget.NewButton("Set", nil)
 	set_button.Importance = widget.HighImportance
 
-	set_box := container.NewBorder(nil, set_spacer, nil, set_button, container.NewAdaptiveGrid(2, set_amt, set_dur))
+	set_box := container.NewVBox(
+		container.NewAdaptiveGrid(2, container.NewVBox(widget.NewLabel("Entry Fee"), set_amt), container.NewVBox(widget.NewLabel("Deposit"), set_dep)),
+		set_spacer,
+		container.NewBorder(widget.NewLabel("Pass Duration"), nil, nil, set_button, set_dur))
 	set_box.Hide()
 
 	// Install SC buttons
@@ -115,7 +123,7 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 					confirming = true
 					disableFunc()
 					go menu.ShowTxDialog("Upload SC", "", tx, 3*time.Second, d.Window)
-					if rpc.ConfirmTx(tx, "Grokked", 60) {
+					if rpc.ConfirmTx(tx, "Grokked", 45) {
 						isOwner = true
 					}
 					time.Sleep(time.Second)
@@ -138,7 +146,7 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 					confirming = true
 					disableFunc()
 					go menu.ShowTxDialog("New SC", "", tx, 3*time.Second, d.Window)
-					rpc.ConfirmTx(tx, "Grokked", 50)
+					rpc.ConfirmTx(tx, "Grokked", 45)
 					time.Sleep(time.Second)
 
 					confirmed <- true
@@ -147,6 +155,35 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 		}, d.Window).Show()
 	}
 	new_button.Hide()
+
+	// Update existing SCID to latest version
+	update_button := widget.NewButton("Update SC", nil)
+	update_button.Importance = widget.HighImportance
+	update_button.Hide()
+	update_button.OnTapped = func() {
+		if gnomon.IsReady() {
+			if _, v := gnomon.GetSCIDValuesByKey(scid, "v"); v != nil {
+				if v[0] == scVersion {
+					dialog.NewInformation("Update", fmt.Sprintf("SCID: %s\n\nThis SCID is already at latest version (v%d)", scid, scVersion), d.Window).Show()
+					return
+				}
+
+				go func() {
+					tx := UpdateGrokked(scid, v[0], scVersion, d)
+					label.SetText("Confirming Update TX...")
+					confirming = true
+					disableFunc()
+					go menu.ShowTxDialog("Update", "", tx, 3*time.Second, d.Window)
+					rpc.ConfirmTx(tx, "Grokked", 45)
+					time.Sleep(time.Second)
+
+					confirmed <- true
+				}()
+			} else {
+				dialog.NewInformation("Update", "Error getting SCID version", d.Window).Show()
+			}
+		}
+	}
 
 	// Set game button
 	set_button.OnTapped = func() {
@@ -157,21 +194,37 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 			}
 		}
 
-		var dep float64
-		amt, err := strconv.ParseFloat(set_amt.Text, 64)
-		if err == nil {
-			dep = amt / 2
-		}
-		dialog.NewConfirm("Set", fmt.Sprintf("Set game for %.5f DERO and %s minutes pass time\n\nYou will deposit %.5f DERO into SC", amt, set_dur.Text, dep), func(b bool) {
+		dialog.NewConfirm("Set", fmt.Sprintf("Set game for %.5f DERO and %s minutes pass time\n\nYou will deposit %.5f DERO into SC", rpc.Float64Type(set_amt.Text), set_dur.Text, rpc.Float64Type(set_dep.Text)), func(b bool) {
 			if b {
 				go func() {
 					seconds := rpc.Uint64Type(set_dur.Text) * 60
-					tx := Set(scid, rpc.ToAtomic(set_amt.Text, 5), seconds)
+					tx := Set(scid, rpc.ToAtomic(set_amt.Text, 5), rpc.ToAtomic(set_dep.Text, 5), seconds)
 					label.SetText("Confirming Set TX...")
 					confirming = true
 					disableFunc()
 					go menu.ShowTxDialog("Set", "", tx, 3*time.Second, d.Window)
-					rpc.ConfirmTx(tx, "Grokked", 50)
+					rpc.ConfirmTx(tx, "Grokked", 45)
+					time.Sleep(time.Second)
+
+					confirmed <- true
+				}()
+			}
+		}, d.Window).Show()
+	}
+
+	cancel_button := widget.NewButton("Cancel", nil)
+	cancel_button.Importance = widget.HighImportance
+	cancel_button.Hide()
+	cancel_button.OnTapped = func() {
+		dialog.NewConfirm("Cancel", "Cancel the round on this SCID?", func(b bool) {
+			if b {
+				go func() {
+					tx := Cancel(scid)
+					label.SetText("Confirming Cancel TX...")
+					confirming = true
+					disableFunc()
+					go menu.ShowTxDialog("Cancel", "", tx, 3*time.Second, d.Window)
+					rpc.ConfirmTx(tx, "Grokked", 45)
 					time.Sleep(time.Second)
 
 					confirmed <- true
@@ -193,7 +246,7 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 					confirming = true
 					disableFunc()
 					go menu.ShowTxDialog("Start", "", tx, 3*time.Second, d.Window)
-					rpc.ConfirmTx(tx, "Grokked", 50)
+					rpc.ConfirmTx(tx, "Grokked", 45)
 					time.Sleep(time.Second)
 
 					confirmed <- true
@@ -219,7 +272,7 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 					confirming = true
 					disableFunc()
 					go menu.ShowTxDialog("Pass", "", tx, 3*time.Second, d.Window)
-					rpc.ConfirmTx(tx, "Grokked", 50)
+					rpc.ConfirmTx(tx, "Grokked", 45)
 					time.Sleep(time.Second)
 
 					confirmed <- true
@@ -233,27 +286,29 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 	join_button := widget.NewButton("Join", nil)
 	join_button.Importance = widget.HighImportance
 	join_button.OnTapped = func() {
-		if _, amt := gnomon.GetSCIDValuesByKey(scid, "amount"); amt != nil {
-			dialog.NewConfirm("Join Game", fmt.Sprintf("Entry is %s DERO", rpc.FromAtomic(amt[0], 5)), func(b bool) {
-				if b {
-					go func() {
-						tx := Join(scid, amt[0])
-						confirming = true
-						label.SetText("Confirming Join TX...")
-						disableFunc()
-						go menu.ShowTxDialog("Join", "", tx, 3*time.Second, d.Window)
-						rpc.ConfirmTx(tx, "Grokked", 50)
-						time.Sleep(time.Second)
+		if gnomon.IsReady() {
+			if _, amt := gnomon.GetSCIDValuesByKey(scid, "amount"); amt != nil {
+				dialog.NewConfirm("Join Game", fmt.Sprintf("Entry is %s DERO", rpc.FromAtomic(amt[0], 5)), func(b bool) {
+					if b {
+						go func() {
+							tx := Join(scid, amt[0])
+							confirming = true
+							label.SetText("Confirming Join TX...")
+							disableFunc()
+							go menu.ShowTxDialog("Join", "", tx, 3*time.Second, d.Window)
+							rpc.ConfirmTx(tx, "Grokked", 45)
+							time.Sleep(time.Second)
 
-						confirmed <- true
-					}()
-				}
-			}, d.Window).Show()
+							confirmed <- true
+						}()
+					}
+				}, d.Window).Show()
 
-			return
+				return
+			}
+
+			logger.Errorln("[Set] No amount given for TX")
 		}
-
-		logger.Errorln("[Set] No amount given for TX")
 	}
 	join_button.Hide()
 
@@ -289,7 +344,7 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 						confirming = true
 						disableFunc()
 						go menu.ShowTxDialog("Grokked", "", tx, 3*time.Second, d.Window)
-						rpc.ConfirmTx(tx, "Grokked", 50)
+						rpc.ConfirmTx(tx, "Grokked", 45)
 						time.Sleep(time.Second)
 
 						confirmed <- true
@@ -314,7 +369,7 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 					confirming = true
 					disableFunc()
 					go menu.ShowTxDialog("Grokked", "", tx, 3*time.Second, d.Window)
-					rpc.ConfirmTx(tx, "Grokked", 50)
+					rpc.ConfirmTx(tx, "Grokked", 45)
 					time.Sleep(time.Second)
 
 					confirmed <- true
@@ -342,7 +397,7 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 										confirming = true
 										disableFunc()
 										go menu.ShowTxDialog("Pay", "", tx, 3*time.Second, d.Window)
-										rpc.ConfirmTx(tx, "Grokked", 50)
+										rpc.ConfirmTx(tx, "Grokked", 45)
 										time.Sleep(time.Second)
 									default:
 										dialog.NewInformation("To Many Players", "There are still more players to be Grokked", d.Window).Show()
@@ -386,6 +441,8 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 		grok_button.Hide()
 		grok_owner_button.Hide()
 		rate_button.Hide()
+		update_button.Hide()
+		cancel_button.Hide()
 	}
 
 	// Main process for Grokked
@@ -476,6 +533,7 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 							// Waiting for owner to set game
 							grok_button.Hide()
 							grok_owner_button.Hide()
+							cancel_button.Hide()
 							join_button.Hide()
 							pass_button.Hide()
 							pay_button.Hide()
@@ -501,6 +559,13 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 							if in != nil {
 								players = in[0]
 							}
+
+							if players == 0 {
+								cancel_button.Show()
+							} else {
+								cancel_button.Hide()
+							}
+
 							if !playing {
 								if !confirming {
 									join_button.Show()
@@ -531,10 +596,10 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 								start_button.Hide()
 							}
 
-							// Grok owner and refund if game hasn't started for 48hrs
+							// Grok owner and refund if game hasn't started for over a week
 							if _, last := gnomon.GetSCIDValuesByKey(scid, "last"); last != nil {
 								now := uint64(time.Now().Unix())
-								if now > last[0]+173400 {
+								if now > last[0]+604800 {
 									if !confirming {
 										grok_owner_button.Show()
 									} else {
@@ -549,6 +614,7 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 							join_button.Hide()
 							set_box.Hide()
 							start_button.Hide()
+							cancel_button.Hide()
 							if _, in := gnomon.GetSCIDValuesByKey(scid, "in"); in != nil {
 								if _, u := gnomon.GetSCIDValuesByKey(scid, "grok"); u != nil {
 									if addr, _ := gnomon.GetSCIDValuesByKey(scid, u[0]); addr != nil {
@@ -722,6 +788,7 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 			layout.NewSpacer(),
 			container.NewVBox(
 				container.NewCenter(set_box),
+				container.NewCenter(cancel_button),
 				container.NewCenter(start_button),
 				container.NewCenter(
 					container.NewHBox(
@@ -766,7 +833,7 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 
 			if c.(*fyne.Container).Objects[0].(*fyne.Container).Objects[0].(*fyne.Container).Objects[1].(*widget.Label).Text != sc.ID {
 				c.(*fyne.Container).Objects[0].(*fyne.Container).Objects[0].(*fyne.Container).Objects[1].(*widget.Label).SetText(sc.ID)
-				c.(*fyne.Container).Objects[0].(*fyne.Container).Objects[0].(*fyne.Container).Objects[0].(*fyne.Container).Objects[1].(*widget.Label).SetText(fmt.Sprintf("%s   %s", sc.Header.Name, sc.Header.Description))
+				c.(*fyne.Container).Objects[0].(*fyne.Container).Objects[0].(*fyne.Container).Objects[0].(*fyne.Container).Objects[1].(*widget.Label).SetText(fmt.Sprintf("%s   (v%d)   %s", sc.Header.Name, sc.Version, sc.Header.Description))
 
 				badge := canvas.NewImageFromResource(menu.DisplayRating(sc.Rating))
 				badge.SetMinSize(fyne.NewSize(35, 35))
@@ -798,6 +865,11 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 	sc_list.OnSelected = func(id int) {
 		scid = contracts[id].ID
 		sc_entry.SetText(scid)
+		if contracts[id].Version < scVersion {
+			update_button.Show()
+		} else {
+			update_button.Hide()
+		}
 	}
 
 	back_button := widget.NewButton("Back", func() {
@@ -808,9 +880,6 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 	sc_button.OnTapped = func() {
 		sc_entry.SetText(scid)
 		sc_list.UnselectAll()
-
-		spacer := canvas.NewRectangle(color.Transparent)
-		spacer.SetMinSize(fyne.NewSize(200, 200))
 
 		max.Objects[0] = container.NewBorder(
 			container.NewVBox(
@@ -823,13 +892,17 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 				layout.NewSpacer(),
 				container.NewBorder(
 					nil,
-					container.NewVBox(
-						container.NewCenter(rate_button),
-						container.NewCenter(
-							spacer,
-							container.NewHBox(
-								container.NewCenter(unlock_button),
-								container.NewCenter(new_button)))),
+					container.NewCenter(
+						dwidget.NewSpacer(100, 180),
+						container.NewVBox(
+							container.NewCenter(rate_button),
+							layout.NewSpacer(),
+							container.NewCenter(unlock_button),
+							layout.NewSpacer(),
+							container.NewCenter(new_button),
+							container.NewCenter(layout.NewSpacer()),
+							layout.NewSpacer(),
+							container.NewCenter(update_button))),
 					nil,
 					nil,
 					sc_list),
@@ -848,6 +921,8 @@ func createGrokkedList(owned bool, progress *widget.ProgressBar) (options []gnom
 			return
 		}
 
+		scVersion = check[0]
+
 		if progress != nil {
 			progress.Max = float64(len(scids))
 			progress.SetValue(0)
@@ -863,6 +938,7 @@ func createGrokkedList(owned bool, progress *widget.ProgressBar) (options []gnom
 					var new gnomes.SC
 					headers := gnomes.GetSCHeaders(scid)
 					new.ID = scid
+					new.Version = version[0]
 					if headers.Name != "" {
 						new.Header.Name = headers.Name
 						if headers.Description != "" {

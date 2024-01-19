@@ -17,13 +17,14 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// const GROKSCID = "80c093dc0def477ea962164bbf86432ccde656bfe4d91c9413dfa80c858f8ff1"
-const GROKSCID = "a3e6a008d760c7b98471f27402f5539cafdfffdde2311174604023a7903a08dc"
+const GROKOG = "a3e6a008d760c7b98471f27402f5539cafdfffdde2311174604023a7903a08dc"
+const GROKSCID = "c140bf05a20fc91e0f511528e534a1cd8d7e457197e0391ec723783df0c8bdc9"
 
 var logger = structures.Logger.WithFields(logrus.Fields{})
 
-var version = semver.MustParse("0.1.0-dev.2")
+var version = semver.MustParse("0.1.0-dev.3")
 var gnomon = gnomes.NewGnomes()
+var scVersion uint64
 
 // Check grok package version
 func Version() semver.Version {
@@ -293,7 +294,7 @@ func RunGrokker() {
 
 								logger.Println("[Grokker] Last player standing, paying out", addr[0])
 								if tx := Win(scid, u[0]); tx != "" {
-									rpc.ConfirmTx(tx, "Grokker", 90)
+									rpc.ConfirmTx(tx, "Grokker", 45)
 									time.Sleep(time.Second)
 									buffer = true
 								}
@@ -312,7 +313,7 @@ func RunGrokker() {
 									if now > tf+10 {
 										logger.Printf("[Grokker] Grokking %d, %d minutes past\n", u[0], (now-tf)/60)
 										if tx := Grokked(scid); tx != "" {
-											rpc.ConfirmTx(tx, "Grokker", 90)
+											rpc.ConfirmTx(tx, "Grokker", 45)
 											time.Sleep(time.Second)
 											buffer = true
 										}
