@@ -13,6 +13,7 @@ This file lists the changes to Grokked repo with each version.
 * Fyne 2.4.3
 * dReams 0.11.1
 * Grokker loop to for select
+* Cleaned up `rpc` client var names
 
 
 ## 0.1.0 - December 23 2023

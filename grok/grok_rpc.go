@@ -11,7 +11,7 @@ import (
 
 // Owner sets entry amount and pass duration
 func Set(scid string, amt, dep, dur uint64) (tx string) {
-	rpcClientW, ctx, cancel := rpc.SetWalletClient(rpc.Wallet.Rpc, rpc.Wallet.UserPass)
+	client, ctx, cancel := rpc.SetWalletClient(rpc.Wallet.Rpc, rpc.Wallet.UserPass)
 	defer cancel()
 
 	args := dero.Arguments{
@@ -37,7 +37,7 @@ func Set(scid string, amt, dep, dur uint64) (tx string) {
 		Fees:      fee,
 	}
 
-	if err := rpcClientW.CallFor(ctx, &txid, "transfer", params); err != nil {
+	if err := client.CallFor(ctx, &txid, "transfer", params); err != nil {
 		rpc.PrintError("[Grokked] Set: %s", err)
 		return
 	}
@@ -49,7 +49,7 @@ func Set(scid string, amt, dep, dur uint64) (tx string) {
 
 // Cancel a game if no players have joined
 func Cancel(scid string) (tx string) {
-	rpcClientW, ctx, cancel := rpc.SetWalletClient(rpc.Wallet.Rpc, rpc.Wallet.UserPass)
+	client, ctx, cancel := rpc.SetWalletClient(rpc.Wallet.Rpc, rpc.Wallet.UserPass)
 	defer cancel()
 
 	args := dero.Arguments{dero.Argument{Name: "entrypoint", DataType: "S", Value: "Cancel"}}
@@ -65,7 +65,7 @@ func Cancel(scid string) (tx string) {
 		Fees:      fee,
 	}
 
-	if err := rpcClientW.CallFor(ctx, &txid, "transfer", params); err != nil {
+	if err := client.CallFor(ctx, &txid, "transfer", params); err != nil {
 		rpc.PrintError("[Grokked] Cancel: %s", err)
 		return
 	}
@@ -77,7 +77,7 @@ func Cancel(scid string) (tx string) {
 
 // Players join a set game
 func Join(scid string, amt uint64) (tx string) {
-	rpcClientW, ctx, cancel := rpc.SetWalletClient(rpc.Wallet.Rpc, rpc.Wallet.UserPass)
+	client, ctx, cancel := rpc.SetWalletClient(rpc.Wallet.Rpc, rpc.Wallet.UserPass)
 	defer cancel()
 
 	args := dero.Arguments{dero.Argument{Name: "entrypoint", DataType: "S", Value: "Join"}}
@@ -99,7 +99,7 @@ func Join(scid string, amt uint64) (tx string) {
 		Fees:      fee,
 	}
 
-	if err := rpcClientW.CallFor(ctx, &txid, "transfer", params); err != nil {
+	if err := client.CallFor(ctx, &txid, "transfer", params); err != nil {
 		rpc.PrintError("[Grokked] Join: %s", err)
 		return
 	}
@@ -111,7 +111,7 @@ func Join(scid string, amt uint64) (tx string) {
 
 // Owner starts the game, must have 3+ players
 func Start(scid string) (tx string) {
-	rpcClientW, ctx, cancel := rpc.SetWalletClient(rpc.Wallet.Rpc, rpc.Wallet.UserPass)
+	client, ctx, cancel := rpc.SetWalletClient(rpc.Wallet.Rpc, rpc.Wallet.UserPass)
 	defer cancel()
 
 	args := dero.Arguments{dero.Argument{Name: "entrypoint", DataType: "S", Value: "Start"}}
@@ -127,7 +127,7 @@ func Start(scid string) (tx string) {
 		Fees:      fee,
 	}
 
-	if err := rpcClientW.CallFor(ctx, &txid, "transfer", params); err != nil {
+	if err := client.CallFor(ctx, &txid, "transfer", params); err != nil {
 		rpc.PrintError("[Grokked] Start: %s", err)
 		return
 	}
@@ -139,7 +139,7 @@ func Start(scid string) (tx string) {
 
 // Pass the Grok to another player
 func Pass(scid string) (tx string) {
-	rpcClientW, ctx, cancel := rpc.SetWalletClient(rpc.Wallet.Rpc, rpc.Wallet.UserPass)
+	client, ctx, cancel := rpc.SetWalletClient(rpc.Wallet.Rpc, rpc.Wallet.UserPass)
 	defer cancel()
 
 	args := dero.Arguments{dero.Argument{Name: "entrypoint", DataType: "S", Value: "Pass"}}
@@ -155,7 +155,7 @@ func Pass(scid string) (tx string) {
 		Fees:      fee,
 	}
 
-	if err := rpcClientW.CallFor(ctx, &txid, "transfer", params); err != nil {
+	if err := client.CallFor(ctx, &txid, "transfer", params); err != nil {
 		rpc.PrintError("[Grokked] Pass: %s", err)
 		return
 	}
@@ -167,7 +167,7 @@ func Pass(scid string) (tx string) {
 
 // Grok player for not paying attention
 func Grokked(scid string) (tx string) {
-	rpcClientW, ctx, cancel := rpc.SetWalletClient(rpc.Wallet.Rpc, rpc.Wallet.UserPass)
+	client, ctx, cancel := rpc.SetWalletClient(rpc.Wallet.Rpc, rpc.Wallet.UserPass)
 	defer cancel()
 
 	args := dero.Arguments{dero.Argument{Name: "entrypoint", DataType: "S", Value: "Grokked"}}
@@ -183,7 +183,7 @@ func Grokked(scid string) (tx string) {
 		Fees:      fee,
 	}
 
-	if err := rpcClientW.CallFor(ctx, &txid, "transfer", params); err != nil {
+	if err := client.CallFor(ctx, &txid, "transfer", params); err != nil {
 		rpc.PrintError("[Grokked] Grok: %s", err)
 		return
 	}
@@ -195,7 +195,7 @@ func Grokked(scid string) (tx string) {
 
 // Win scenario when one player left
 func Win(scid string, a uint64) (tx string) {
-	rpcClientW, ctx, cancel := rpc.SetWalletClient(rpc.Wallet.Rpc, rpc.Wallet.UserPass)
+	client, ctx, cancel := rpc.SetWalletClient(rpc.Wallet.Rpc, rpc.Wallet.UserPass)
 	defer cancel()
 
 	args := dero.Arguments{
@@ -214,7 +214,7 @@ func Win(scid string, a uint64) (tx string) {
 		Fees:      fee,
 	}
 
-	if err := rpcClientW.CallFor(ctx, &txid, "transfer", params); err != nil {
+	if err := client.CallFor(ctx, &txid, "transfer", params); err != nil {
 		rpc.PrintError("[Grokked] Win: %s", err)
 		return
 	}
@@ -226,7 +226,7 @@ func Win(scid string, a uint64) (tx string) {
 
 // Grok the SC owner and payout all players
 func Refund(scid string, p uint64) (tx string) {
-	rpcClientW, ctx, cancel := rpc.SetWalletClient(rpc.Wallet.Rpc, rpc.Wallet.UserPass)
+	client, ctx, cancel := rpc.SetWalletClient(rpc.Wallet.Rpc, rpc.Wallet.UserPass)
 	defer cancel()
 
 	args := dero.Arguments{
@@ -245,7 +245,7 @@ func Refund(scid string, p uint64) (tx string) {
 		Fees:      fee,
 	}
 
-	if err := rpcClientW.CallFor(ctx, &txid, "transfer", params); err != nil {
+	if err := client.CallFor(ctx, &txid, "transfer", params); err != nil {
 		rpc.PrintError("[Grokked] Refund: %s", err)
 		return
 	}
@@ -257,7 +257,7 @@ func Refund(scid string, p uint64) (tx string) {
 
 // Upload a new Grokked SC
 func UploadContract(owner bool) (tx string) {
-	rpcClientW, ctx, cancel := rpc.SetWalletClient(rpc.Wallet.Rpc, rpc.Wallet.UserPass)
+	client, ctx, cancel := rpc.SetWalletClient(rpc.Wallet.Rpc, rpc.Wallet.UserPass)
 	defer cancel()
 
 	code := rpc.GetSCCode(GROKSCID)
@@ -285,7 +285,7 @@ func UploadContract(owner bool) (tx string) {
 		Ringsize:  2,
 	}
 
-	if err := rpcClientW.CallFor(ctx, &txid, "transfer", params); err != nil {
+	if err := client.CallFor(ctx, &txid, "transfer", params); err != nil {
 		rpc.PrintError("[Grokked] Upload: %s", err)
 		return
 	}
@@ -313,7 +313,7 @@ func UpdateGrokked(scid string, version, update uint64, d *dreams.AppObject) (tx
 	fee := rpc.GasEstimate(scid, "[Grokked]", args, t, rpc.HighLimitFee*2)
 	dialog.NewConfirm("Update SC", fmt.Sprintf("SCID: %s\n\nUpdate from (v%d), to latest version (v%d)? Gas fee is %s DERO", scid, version, update, rpc.FromAtomic(fee, 5)), func(b bool) {
 		if b {
-			rpcClientW, ctx, cancel := rpc.SetWalletClient(rpc.Wallet.Rpc, rpc.Wallet.UserPass)
+			client, ctx, cancel := rpc.SetWalletClient(rpc.Wallet.Rpc, rpc.Wallet.UserPass)
 			defer cancel()
 
 			params := &dero.Transfer_Params{
@@ -324,7 +324,7 @@ func UpdateGrokked(scid string, version, update uint64, d *dreams.AppObject) (tx
 				Fees:      fee,
 			}
 
-			if err := rpcClientW.CallFor(ctx, &txid, "transfer", params); err != nil {
+			if err := client.CallFor(ctx, &txid, "transfer", params); err != nil {
 				rpc.PrintError("[Grokked] Update: %s", err)
 				return
 			}
