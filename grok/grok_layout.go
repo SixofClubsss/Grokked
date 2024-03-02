@@ -22,7 +22,7 @@ import (
 	"github.com/dReam-dApps/dReams/rpc"
 )
 
-func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
+func LayoutAll(d *dreams.AppObject) fyne.CanvasObject {
 	var scid string
 	var max *fyne.Container
 	var sc_list *widget.List
@@ -82,15 +82,15 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 	ind.SetMinSize(fyne.NewSize(400, 320))
 
 	// Set game objects
-	set_amt := dwidget.NewDeroEntry("", 0.1, 5)
+	set_amt := dwidget.NewAmountEntry("", 0.1, 5)
 	set_amt.SetPlaceHolder("DERO:")
 	set_amt.AllowFloat = true
 
-	set_dur := dwidget.NewDeroEntry("", 1, 0)
+	set_dur := dwidget.NewAmountEntry("", 1, 0)
 	set_dur.SetPlaceHolder("Minutes:")
 	set_dur.AllowFloat = false
 
-	set_dep := dwidget.NewDeroEntry("", 0.1, 5)
+	set_dep := dwidget.NewAmountEntry("", 0.1, 5)
 	set_dep.SetPlaceHolder("DERO:")
 	set_dep.AllowFloat = true
 
@@ -550,7 +550,6 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 						case 1:
 							// Game is set, waiting for players to join or owner to start game
 							grok_button.Hide()
-							grok_owner_button.Hide()
 							pass_button.Hide()
 							pay_button.Hide()
 							set_box.Hide()
@@ -609,6 +608,8 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 								} else {
 									grok_owner_button.Hide()
 								}
+							} else {
+								grok_owner_button.Hide()
 							}
 						case 2:
 							join_button.Hide()

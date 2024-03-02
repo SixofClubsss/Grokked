@@ -210,7 +210,7 @@ func RunGrokker() {
 				return
 			default:
 				rpc.Ping()
-				rpc.EchoWallet("Grokker")
+				rpc.Wallet.Echo()
 				gnomon.IndexContains()
 				if gnomon.GetLastHeight() >= gnomon.GetChainHeight()-3 && gnomon.HasIndex(1) {
 					gnomon.Synced(true)
