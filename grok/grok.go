@@ -22,7 +22,7 @@ const GROKSCID = "c140bf05a20fc91e0f511528e534a1cd8d7e457197e0391ec723783df0c8bd
 
 var logger = structures.Logger.WithFields(logrus.Fields{})
 
-var version = semver.MustParse("0.1.1-dev.0")
+var version = semver.MustParse("0.1.1-dev.1")
 var gnomon = gnomes.NewGnomes()
 var scVersion uint64
 
@@ -125,7 +125,7 @@ func RunGrokker() {
 
 	// Set default rpc params
 	rpc.Daemon.Rpc = "127.0.0.1:10102"
-	rpc.Wallet.Rpc = "127.0.0.1:10103"
+	rpc.Wallet.RPC.Port = "127.0.0.1:10103"
 
 	if arguments["--daemon"] != nil {
 		if arguments["--daemon"].(string) != "" {
@@ -135,13 +135,13 @@ func RunGrokker() {
 
 	if arguments["--wallet"] != nil {
 		if arguments["--wallet"].(string) != "" {
-			rpc.Wallet.Rpc = arguments["--wallet"].(string)
+			rpc.Wallet.RPC.Port = arguments["--wallet"].(string)
 		}
 	}
 
 	if arguments["--login"] != nil {
 		if arguments["--login"].(string) != "" {
-			rpc.Wallet.UserPass = arguments["--login"].(string)
+			rpc.Wallet.RPC.Auth = arguments["--login"].(string)
 		}
 	}
 
@@ -161,6 +161,9 @@ func RunGrokker() {
 
 	logger.Printf("[Grokker] %s  OS: %s  ARCH: %s  DREAMS: %s  GNOMON: %s\n", version.String(), runtime.GOOS, runtime.GOARCH, rpc.Version(), structures.Version.String())
 
+	// Initialize wallet RPC server connection
+	rpc.Wallet.RPC.Init()
+
 	// Check for daemon connection
 	rpc.Ping()
 	if !rpc.Daemon.IsConnected() {
@@ -170,7 +173,7 @@ func RunGrokker() {
 	// Check for wallet connection
 	rpc.GetAddress("Grokker")
 	if !rpc.Wallet.IsConnected() {
-		logger.Fatalf("[Grokker] Wallet %s not connected\n", rpc.Wallet.Rpc)
+		logger.Fatalf("[Grokker] Wallet %s not connected\n", rpc.Wallet.RPC.Port)
 	}
 
 	done := make(chan struct{})
@@ -207,7 +210,7 @@ func RunGrokker() {
 				return
 			default:
 				rpc.Ping()
-				rpc.EchoWallet("Grokker")
+				rpc.Wallet.Echo()
 				gnomon.IndexContains()
 				if gnomon.GetLastHeight() >= gnomon.GetChainHeight()-3 && gnomon.HasIndex(1) {
 					gnomon.Synced(true)

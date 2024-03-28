@@ -22,7 +22,7 @@ import (
 	"github.com/dReam-dApps/dReams/rpc"
 )
 
-func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
+func LayoutAll(d *dreams.AppObject) fyne.CanvasObject {
 	var scid string
 	var max *fyne.Container
 	var sc_list *widget.List
@@ -82,15 +82,29 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 	ind.SetMinSize(fyne.NewSize(400, 320))
 
 	// Set game objects
-	set_amt := dwidget.NewDeroEntry("", 0.1, 5)
+	set_amt := dwidget.NewAmountEntry("", 0.1, 5)
 	set_amt.SetPlaceHolder("DERO:")
 	set_amt.AllowFloat = true
 
-	set_dur := dwidget.NewDeroEntry("", 1, 0)
+	set_dur := dwidget.NewAmountEntry("", 1, 0)
 	set_dur.SetPlaceHolder("Minutes:")
 	set_dur.AllowFloat = false
+	set_dur.Validator = func(s string) error {
+		dur, err := strconv.ParseInt(s, 10, 64)
+		if err != nil {
+			return fmt.Errorf("requires int")
+		}
 
-	set_dep := dwidget.NewDeroEntry("", 0.1, 5)
+		if dur < 5 {
+			return fmt.Errorf("duration to short")
+		} else if dur > 4320 {
+			return fmt.Errorf("duration to long")
+		}
+
+		return nil
+	}
+
+	set_dep := dwidget.NewAmountEntry("", 0.1, 5)
 	set_dep.SetPlaceHolder("DERO:")
 	set_dep.AllowFloat = true
 
@@ -190,6 +204,9 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 		if dur, err := strconv.ParseInt(set_dur.Text, 10, 64); err == nil {
 			if dur < 5 {
 				dialog.NewInformation("Short Duration", "Duration has to be longer than 5 minutes", d.Window).Show()
+				return
+			} else if dur > 4320 {
+				dialog.NewInformation("Long Duration", "Duration has to be longer than 3 days (4320 minutes)", d.Window).Show()
 				return
 			}
 		}
@@ -550,7 +567,6 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 						case 1:
 							// Game is set, waiting for players to join or owner to start game
 							grok_button.Hide()
-							grok_owner_button.Hide()
 							pass_button.Hide()
 							pay_button.Hide()
 							set_box.Hide()
@@ -609,6 +625,8 @@ func LayoutAllItems(d *dreams.AppObject) fyne.CanvasObject {
 								} else {
 									grok_owner_button.Hide()
 								}
+							} else {
+								grok_owner_button.Hide()
 							}
 						case 2:
 							join_button.Hide()
