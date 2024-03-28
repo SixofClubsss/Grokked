@@ -2,6 +2,18 @@
 
 This file lists the changes to Grokked repo with each version.
 
+## 0.x.x - In Progress
+
+### Added
+
+* XSWD and DERO connections and calls
+* Set duration validator
+
+### Changed
+
+* Fyne 2.4.4
+* dReams 0.12.0
+
 ## 0.1.1 - January 19 2024
 
 ### Added
