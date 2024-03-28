@@ -89,6 +89,20 @@ func LayoutAll(d *dreams.AppObject) fyne.CanvasObject {
 	set_dur := dwidget.NewAmountEntry("", 1, 0)
 	set_dur.SetPlaceHolder("Minutes:")
 	set_dur.AllowFloat = false
+	set_dur.Validator = func(s string) error {
+		dur, err := strconv.ParseInt(s, 10, 64)
+		if err != nil {
+			return fmt.Errorf("requires int")
+		}
+
+		if dur < 5 {
+			return fmt.Errorf("duration to short")
+		} else if dur > 4320 {
+			return fmt.Errorf("duration to long")
+		}
+
+		return nil
+	}
 
 	set_dep := dwidget.NewAmountEntry("", 0.1, 5)
 	set_dep.SetPlaceHolder("DERO:")
@@ -190,6 +204,9 @@ func LayoutAll(d *dreams.AppObject) fyne.CanvasObject {
 		if dur, err := strconv.ParseInt(set_dur.Text, 10, 64); err == nil {
 			if dur < 5 {
 				dialog.NewInformation("Short Duration", "Duration has to be longer than 5 minutes", d.Window).Show()
+				return
+			} else if dur > 4320 {
+				dialog.NewInformation("Long Duration", "Duration has to be longer than 3 days (4320 minutes)", d.Window).Show()
 				return
 			}
 		}
