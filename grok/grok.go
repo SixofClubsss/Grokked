@@ -22,7 +22,7 @@ const GROKSCID = "c140bf05a20fc91e0f511528e534a1cd8d7e457197e0391ec723783df0c8bd
 
 var logger = structures.Logger.WithFields(logrus.Fields{})
 
-var version = semver.MustParse("0.1.1-dev.6")
+var version = semver.MustParse("0.1.1-dev.7")
 var gnomon = gnomes.NewGnomes()
 var scVersion uint64
 
@@ -124,12 +124,12 @@ func RunGrokker() {
 	}
 
 	// Set default rpc params
-	rpc.Daemon.Rpc = "127.0.0.1:10102"
+	rpc.Daemon.Endpoint = "127.0.0.1:10102"
 	rpc.Wallet.RPC.Port = "127.0.0.1:10103"
 
 	if arguments["--daemon"] != nil {
 		if arguments["--daemon"].(string) != "" {
-			rpc.Daemon.Rpc = arguments["--daemon"].(string)
+			rpc.Daemon.Endpoint = arguments["--daemon"].(string)
 		}
 	}
 
@@ -165,9 +165,9 @@ func RunGrokker() {
 	rpc.Wallet.RPC.Init()
 
 	// Check for daemon connection
-	rpc.Ping()
+	rpc.Daemon.Ping()
 	if !rpc.Daemon.IsConnected() {
-		logger.Fatalf("[Grokker] Daemon %s not connected\n", rpc.Daemon.Rpc)
+		logger.Fatalf("[Grokker] Daemon %s not connected\n", rpc.Daemon.Endpoint)
 	}
 
 	// Check for wallet connection
@@ -209,7 +209,7 @@ func RunGrokker() {
 			case <-done:
 				return
 			default:
-				rpc.Ping()
+				rpc.Daemon.Ping()
 				rpc.Wallet.Echo()
 				gnomon.IndexContains()
 				if gnomon.GetLastHeight() >= gnomon.GetChainHeight()-3 && gnomon.HasIndex(1) {
