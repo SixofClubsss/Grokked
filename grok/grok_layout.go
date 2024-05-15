@@ -55,7 +55,7 @@ func LayoutAll(d *dreams.AppObject) fyne.CanvasObject {
 				for _, sc := range all {
 					for i := uint64(0); i < 31; i++ {
 						if addr, _, _ := gnomon.GetLiveSCIDValuesByKey(sc.ID, i); addr != nil {
-							if addr[0] == rpc.Wallet.Address {
+							if rpc.Wallet.IsAddress(addr[0]) {
 								joined = append(joined, sc)
 							}
 						}
@@ -206,7 +206,7 @@ func LayoutAll(d *dreams.AppObject) fyne.CanvasObject {
 				dialog.NewInformation("Short Duration", "Duration has to be longer than 5 minutes", d.Window).Show()
 				return
 			} else if dur > 4320 {
-				dialog.NewInformation("Long Duration", "Duration has to be longer than 3 days (4320 minutes)", d.Window).Show()
+				dialog.NewInformation("Long Duration", "Duration has to be shorter than 3 days (4320 minutes)", d.Window).Show()
 				return
 			}
 		}
@@ -343,7 +343,7 @@ func LayoutAll(d *dreams.AppObject) fyne.CanvasObject {
 			} else {
 				for i := uint64(0); i < 31; i++ {
 					if addr, _, _ := gnomon.GetLiveSCIDValuesByKey(scid, i); addr != nil {
-						if addr[0] == rpc.Wallet.Address {
+						if rpc.Wallet.IsAddress(addr[0]) {
 							num = i
 							break
 						}
@@ -504,7 +504,7 @@ func LayoutAll(d *dreams.AppObject) fyne.CanvasObject {
 				}
 
 				// Grok initial sync
-				if !synced && gnomes.Scan(d.IsConfiguring()) {
+				if !synced && gnomes.Scan() {
 					logger.Println("[Grokked] Syncing")
 					contracts, isOwner = createGrokkedList(true, progress)
 					synced = true
@@ -527,7 +527,7 @@ func LayoutAll(d *dreams.AppObject) fyne.CanvasObject {
 					for i := uint64(0); i < 31; i++ {
 						if addr, _, _ := gnomon.GetLiveSCIDValuesByKey(scid, i); addr != nil {
 							players = append(players, fmt.Sprintf("(%d) %s", i, addr[0]))
-							if addr[0] == rpc.Wallet.Address {
+							if rpc.Wallet.IsAddress(addr[0]) {
 								playing = true
 							}
 						}
@@ -539,7 +539,7 @@ func LayoutAll(d *dreams.AppObject) fyne.CanvasObject {
 					// Find owner of SC
 					var owned bool
 					if owner, _ := gnomon.GetSCIDValuesByKey(scid, "owner"); owner != nil {
-						if owner[0] == rpc.Wallet.Address {
+						if rpc.Wallet.IsAddress(owner[0]) {
 							owned = true
 						}
 					}
@@ -645,7 +645,7 @@ func LayoutAll(d *dreams.AppObject) fyne.CanvasObject {
 												amt = pot[0] / 2
 											}
 
-											if addr[0] != rpc.Wallet.Address {
+											if !rpc.Wallet.IsAddress(addr[0]) {
 												label.SetText(fmt.Sprintf("Try harder Grok, Winner is %d, (%s DERO)\n(%s)", u[0], rpc.FromAtomic(amt, 5), addr[0]))
 												ind.Resource = resourceGrokJpg
 												ind.Refresh()
@@ -720,7 +720,7 @@ func LayoutAll(d *dreams.AppObject) fyne.CanvasObject {
 											}
 
 											// Grok image and text
-											if addr[0] == rpc.Wallet.Address {
+											if rpc.Wallet.IsAddress(addr[0]) {
 												ind.Resource = resourceGrokJpg
 												ind.Refresh()
 												if !confirming {
@@ -980,7 +980,7 @@ func createGrokkedList(owned bool, progress *widget.ProgressBar) (options []gnom
 
 					if owned {
 						if o, _ := gnomon.GetSCIDValuesByKey(scid, "owner"); o != nil {
-							if o[0] == rpc.Wallet.Address {
+							if rpc.Wallet.IsAddress(o[0]) {
 								owner = true
 								options = append(options, new)
 								continue

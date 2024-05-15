@@ -22,7 +22,7 @@ const GROKSCID = "c140bf05a20fc91e0f511528e534a1cd8d7e457197e0391ec723783df0c8bd
 
 var logger = structures.Logger.WithFields(logrus.Fields{})
 
-var version = semver.MustParse("0.1.1-dev.7")
+var version = semver.MustParse("0.1.1-dev.8")
 var gnomon = gnomes.NewGnomes()
 var scVersion uint64
 
@@ -165,8 +165,7 @@ func RunGrokker() {
 	rpc.Wallet.RPC.Init()
 
 	// Check for daemon connection
-	rpc.Daemon.Ping()
-	if !rpc.Daemon.IsConnected() {
+	if !rpc.Daemon.Ping() {
 		logger.Fatalf("[Grokker] Daemon %s not connected\n", rpc.Daemon.Endpoint)
 	}
 
