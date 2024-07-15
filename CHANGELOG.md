@@ -11,7 +11,7 @@ This file lists the changes to Grokked repo with each version.
 
 ### Changed
 
-* Fyne 2.4.5
+* Fyne 2.5.0
 * dReams 0.12.0
 
 ## 0.1.1 - January 19 2024
