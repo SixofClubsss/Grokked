@@ -14,6 +14,7 @@ import (
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/widget"
+	"github.com/civilware/tela/logger"
 	dreams "github.com/dReam-dApps/dReams"
 	"github.com/dReam-dApps/dReams/bundle"
 	"github.com/dReam-dApps/dReams/dwidget"
@@ -324,7 +325,7 @@ func LayoutAll(d *dreams.AppObject) fyne.CanvasObject {
 				return
 			}
 
-			logger.Errorln("[Set] No amount given for TX")
+			logger.Errorf("[Set] No amount given for TX\n")
 		}
 	}
 	join_button.Hide()
@@ -442,7 +443,7 @@ func LayoutAll(d *dreams.AppObject) fyne.CanvasObject {
 			menu.RateConfirm(scid, d)
 		} else {
 			dialog.NewInformation("Can't rate", "You are the owner of this SCID", d.Window).Show()
-			logger.Warnln("[Grokked] Can't rate, you own this contract")
+			logger.Warnf("[Grokked] Can't rate, you own this contract\n")
 		}
 	})
 
@@ -505,7 +506,7 @@ func LayoutAll(d *dreams.AppObject) fyne.CanvasObject {
 
 				// Grok initial sync
 				if !synced && gnomes.Scan() {
-					logger.Println("[Grokked] Syncing")
+					logger.Printf("[Grokked] Syncing\n")
 					contracts, isOwner = createGrokkedList(true, progress)
 					synced = true
 					rate_button.Show()
@@ -776,7 +777,7 @@ func LayoutAll(d *dreams.AppObject) fyne.CanvasObject {
 				d.WorkDone()
 
 			case <-d.CloseDapp():
-				logger.Println("[Grokked] Done")
+				logger.Printf("[Grokked] Done\n")
 				return
 			}
 		}
@@ -864,7 +865,7 @@ func LayoutAll(d *dreams.AppObject) fyne.CanvasObject {
 							c.(*fyne.Container).Objects[0].(*fyne.Container).Objects[1].(*fyne.Container).Objects[0].(*fyne.Container).Objects[0] = container.NewCenter(canv)
 						}
 					} else {
-						logger.Errorln("[Grokked] img", err)
+						logger.Errorf("[Grokked] DownloadBytes: %s\n", err)
 					}
 
 				} else {

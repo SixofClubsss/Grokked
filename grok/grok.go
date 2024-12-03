@@ -10,19 +10,17 @@ import (
 
 	"github.com/blang/semver/v4"
 	"github.com/civilware/Gnomon/structures"
+	"github.com/civilware/tela/logger"
 	"github.com/dReam-dApps/dReams/gnomes"
 	"github.com/dReam-dApps/dReams/menu"
 	"github.com/dReam-dApps/dReams/rpc"
 	"github.com/docopt/docopt-go"
-	"github.com/sirupsen/logrus"
 )
 
 const GROKOG = "a3e6a008d760c7b98471f27402f5539cafdfffdde2311174604023a7903a08dc"
 const GROKSCID = "c140bf05a20fc91e0f511528e534a1cd8d7e457197e0391ec723783df0c8bdc9"
 
-var logger = structures.Logger.WithFields(logrus.Fields{})
-
-var version = semver.MustParse("0.1.1-dev.9")
+var version = semver.MustParse("0.1.1-dev.10")
 var gnomon = gnomes.NewGnomes()
 var scVersion uint64
 
@@ -90,7 +88,6 @@ Options:
 func RunGrokker() {
 	n := runtime.NumCPU()
 	runtime.GOMAXPROCS(n)
-	gnomes.InitLogrusLog(logrus.InfoLevel)
 
 	arguments, err := docopt.ParseArgs(command_line, nil, version.String())
 	if err != nil {
@@ -153,7 +150,7 @@ func RunGrokker() {
 	}
 
 	if scid == "" {
-		logger.Fatalln("[Grokker] No --scid given")
+		logger.Fatalf("[Grokker] No --scid given\n")
 	}
 
 	gnomon.SetFastsync(fastsync, true, 10000)
@@ -186,7 +183,7 @@ func RunGrokker() {
 		gnomon.Stop("Grokker")
 		rpc.Wallet.Connected(false)
 		menu.SetClose(true)
-		logger.Println("[Grokker] Closing...")
+		logger.Printf("[Grokker] Closing...\n")
 	}()
 
 	// Set up Gnomon search filters for Grokked SCIDs
@@ -201,7 +198,7 @@ func RunGrokker() {
 			time.Sleep(time.Second)
 		}
 
-		logger.Println("[Grokker] Starting when Gnomon is synced")
+		logger.Printf("[Grokker] Starting when Gnomon is synced\n")
 
 		for {
 			select {
@@ -246,11 +243,11 @@ func RunGrokker() {
 	}
 
 	if !valid {
-		logger.Warnf("[Grokker] %s not a valid Grokked SCID", scid)
+		logger.Warnf("[Grokker] %s not a valid Grokked SCID\n", scid)
 		gnomon.Stop("Grokker")
 		rpc.Wallet.Connected(false)
 		menu.SetClose(true)
-		logger.Println("[Grokker] Closing...")
+		logger.Printf("[Grokker] Closing...\n")
 	}
 
 	// Start Grokker
@@ -260,13 +257,13 @@ func RunGrokker() {
 			switch u[0] {
 			case 0:
 				if !firstCase {
-					logger.Println("[Grokker] Waiting to set the game...")
+					logger.Printf("[Grokker] Waiting to set the game...\n")
 					firstCase = true
 					secondCase = false
 				}
 			case 1:
 				if !secondCase {
-					logger.Println("[Grokker] Waiting for player to join the game...")
+					logger.Printf("[Grokker] Waiting for player to join the game...\n")
 					firstCase = false
 					secondCase = true
 				}
@@ -290,11 +287,11 @@ func RunGrokker() {
 							switch in[0] {
 							case 1:
 								if !rpc.Wallet.IsConnected() {
-									logger.Errorln("[Grokker] Wallet not connected")
+									logger.Errorf("[Grokker] Wallet not connected\n")
 									continue
 								}
 
-								logger.Println("[Grokker] Last player standing, paying out", addr[0])
+								logger.Printf("[Grokker] Last player standing, paying out %s\n", addr[0])
 								if tx := Win(scid, u[0]); tx != "" {
 									rpc.ConfirmTx(tx, "Grokker", 45)
 									time.Sleep(time.Second)
@@ -302,7 +299,7 @@ func RunGrokker() {
 								}
 							default:
 								if !rpc.Wallet.IsConnected() {
-									logger.Errorln("[Grokker] Wallet not connected")
+									logger.Errorf("[Grokker] Wallet not connected\n")
 									continue
 								}
 
@@ -332,7 +329,7 @@ func RunGrokker() {
 					}
 
 				} else {
-					logger.Println("[Grokker] Can't read in value")
+					logger.Printf("[Grokker] Can't read in value\n")
 				}
 			default:
 
@@ -342,5 +339,5 @@ func RunGrokker() {
 
 	close(done)
 	time.Sleep(2 * time.Second)
-	logger.Println("[Grokker] Closed")
+	logger.Printf("[Grokker] Closed\n")
 }
